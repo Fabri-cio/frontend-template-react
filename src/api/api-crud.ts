@@ -117,9 +117,7 @@ export const createCrudOperations = <
      * ========================================================================
      */
     getOne: async (id: EntityId): Promise<TEntity> => {
-      return api.get<TEntity>(
-        `/${normalizedResource}/${encodeURIComponent(String(id))}`,
-      );
+      return api.get<TEntity>(buildResourceUrl(encodeURIComponent(String(id))));
     },
 
     /**
@@ -128,7 +126,7 @@ export const createCrudOperations = <
      * ========================================================================
      */
     create: async (data: TCreate): Promise<TEntity> => {
-      return api.post<TEntity, TCreate>(`/${normalizedResource}`, data);
+      return api.post<TEntity, TCreate>(buildResourceUrl(), data);
     },
 
     /**
@@ -137,7 +135,7 @@ export const createCrudOperations = <
      * ========================================================================
      */
     update: async (id: EntityId, data: TUpdate): Promise<TEntity> => {
-      const url = `/${normalizedResource}/${encodeURIComponent(String(id))}`;
+      const url = buildResourceUrl(encodeURIComponent(String(id)));
 
       if (updateMethod === "PATCH") {
         return api.patch<TEntity, TUpdate>(url, data);
@@ -153,7 +151,7 @@ export const createCrudOperations = <
      */
     delete: async (id: EntityId): Promise<TDeleteResponse> => {
       return api.delete<TDeleteResponse>(
-        `/${normalizedResource}/${encodeURIComponent(String(id))}`,
+        buildResourceUrl(encodeURIComponent(String(id))),
       );
     },
   };
