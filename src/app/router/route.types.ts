@@ -24,22 +24,44 @@ export interface RouteMeta {
 }
 
 /**
- * ===========================================================================
- * APP ROUTE
- * ===========================================================================
+ * ============================================================================
+ * APPLICATION ROUTE
+ * ============================================================================
  *
- * Contrato genérico de una ruta de la aplicación.
+ * Representa una ruta independiente de la implementación concreta
+ * del dominio de la aplicación.
  *
- * No contiene información específica de ningún backend,
- * módulo o dominio.
+ * Permite construir árboles de rutas mediante `children`.
  */
 export interface AppRoute {
+  /**
+   * Ruta.
+   *
+   * Ejemplos:
+   *
+   * "/"
+   * "/users"
+   * "users"
+   * ":id"
+   * "*"
+   */
   path?: string;
 
-  index?: boolean;
-
+  /**
+   * Componente que representa la ruta.
+   */
   element?: ReactNode;
 
+  /**
+   * Indica una ruta índice dentro de una ruta padre.
+   */
+  index?: boolean;
+
+  /**
+   * Rutas hijas.
+   *
+   * Permite construir estructuras anidadas.
+   */
   children?: AppRoute[];
 
   meta?: RouteMeta;

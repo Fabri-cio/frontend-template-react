@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import type { AppRoute } from "./route.types";
 import { Suspense } from "react";
+import { RouteGuard, type RouteAccessResult } from "./route-guard";
 
 /**
  * ===========================================================================
@@ -26,9 +27,21 @@ import { Suspense } from "react";
 
 interface RouteRendererProps {
   routes: AppRoute[];
+
+  /**
+   * Determina si una ruta protegida puede ser accedida.
+   *
+   * Es opcional porque no todas las aplicaciones necesitan
+   * autenticación o autorización.
+   */
+  canAccess?: (route: AppRoute) => RouteAccessResult;
 }
 
-const renderRoute = (route: AppRoute, index: number) => {
+const renderRoute = (
+  route: AppRoute,
+  index: number,
+  canAccess?: (route: AppRoute) => RouteAccessResult,
+) => {
   const key = route.path ?? `index-${index}`;
 
   /**
@@ -43,7 +56,14 @@ const renderRoute = (route: AppRoute, index: number) => {
    * - no tienen rutas hijas
    */
   if (route.index) {
-    return <Route key={key} index element={route.element} />;
+    const element = canAccess ? (
+      <RouteGuard route={route} canAccess={canAccess}>
+        {route.element}
+      </RouteGuard>
+    ) : (
+      route.element
+    );
+    return <Route key={key} index element={element} />;
   }
 
   /**
@@ -53,11 +73,23 @@ const renderRoute = (route: AppRoute, index: number) => {
    *
    * Una ruta puede actuar como padre de otras rutas.
    */
-  if (route.children) {
+  if (route.children && route.children.length > 0) {
     return (
-      <Route key={key} path={route.path} element={route.element}>
+      <Route
+        key={key}
+        path={route.path}
+        element={
+          canAccess ? (
+            <RouteGuard route={route} canAccess={canAccess}>
+              {route.element}
+            </RouteGuard>
+          ) : (
+            route.element
+          )
+        }
+      >
         {route.children.map((childRoute, childIndex) =>
-          renderRoute(childRoute, childIndex),
+          renderRoute(childRoute, childIndex, canAccess),
         )}
       </Route>
     );
@@ -68,13 +100,23 @@ const renderRoute = (route: AppRoute, index: number) => {
    * NORMAL ROUTE
    * -------------------------------------------------------------------------
    */
-  return <Route key={key} path={route.path} element={route.element} />;
+  const element = canAccess ? (
+    <RouteGuard route={route} canAccess={canAccess}>
+      {route.element}
+    </RouteGuard>
+  ) : (
+    route.element
+  );
+
+  return <Route key={key} path={route.path} element={element} />;
 };
 
-export const RouteRenderer = ({ routes }: RouteRendererProps) => {
+export const RouteRenderer = ({ routes, canAccess }: RouteRendererProps) => {
   return (
     <Suspense fallback={<div>Cargando...</div>}>
-      <Routes>{routes.map(renderRoute)}</Routes>
+      <Routes>
+        {routes.map((route, index) => renderRoute(route, index, canAccess))}
+      </Routes>
     </Suspense>
   );
 };

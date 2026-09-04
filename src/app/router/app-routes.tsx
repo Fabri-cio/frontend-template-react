@@ -1,35 +1,66 @@
+import { lazy } from "react";
+
 import type { AppRoute } from "./route.types";
-import HomePage from "../../pages/home/home-page";
-import NotFoundPage from "../../pages/not-found/not-found-page";
+import { Navigate } from "react-router-dom";
+
+const HomePage = lazy(() => import("../../pages/home/home-page"));
+
+const NotFoundPage = lazy(() => import("../../pages/not-found/not-found-page"));
+
+const AppLayout = lazy(() => import("../../pages/layouts/app-layout"));
+
+const DashboardPage = lazy(
+  () => import("../../pages/dashboard/dashboard-page"),
+);
 
 /**
- * ===========================================================================
+ * ============================================================================
  * APPLICATION ROUTES
- * ===========================================================================
+ * ============================================================================
  *
- * Punto de entrada para las rutas de la aplicación.
+ * Configuración de rutas específica de la aplicación.
  *
- * Este archivo pertenece a la aplicación, no al core del router.
- *
- * Aquí se registrarán posteriormente los grupos de rutas que necesite
- * cada proyecto.
- *
- * El router genérico no conoce estos módulos.
+ * El router genérico únicamente interpreta esta estructura.
  */
-
 export const appRoutes: AppRoute[] = [
+  /**
+   * Ruta pública.
+   */
   {
     path: "/",
     element: <HomePage />,
   },
 
   /**
-   * -------------------------------------------------------------------------
-   * NOT FOUND
-   * -------------------------------------------------------------------------
+   * Grupo de rutas que comparten un layout.
+   */
+  {
+    element: <AppLayout />,
+    children: [
+      {
+        path: "/dashboard",
+        element: <DashboardPage />,
+      },
+    ],
+  },
+
+  /**
+   * --------------------------------------------------------------------------
+   * REDIRECT
+   * --------------------------------------------------------------------------
    *
-   * La ruta `*` funciona como fallback para cualquier URL que no
-   * coincida con las rutas anteriores.
+   * Ejemplo de una redirección configurada por la aplicación.
+   *
+   * El router genérico no necesita conocer ninguna lógica especial
+   * de redirects.
+   */
+  {
+    path: "/old-dashboard",
+    element: <Navigate to="/dashboard" replace />,
+  },
+
+  /**
+   * Fallback.
    */
   {
     path: "*",
