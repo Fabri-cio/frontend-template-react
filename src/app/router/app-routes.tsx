@@ -1,4 +1,6 @@
 import type { AppRoute } from "./route.types";
+import HomePage from "../../pages/home/home-page";
+import NotFoundPage from "../../pages/not-found/not-found-page";
 
 /**
  * ===========================================================================
@@ -15,4 +17,22 @@ import type { AppRoute } from "./route.types";
  * El router genérico no conoce estos módulos.
  */
 
-export const appRoutes: AppRoute[] = [];
+export const appRoutes: AppRoute[] = [
+  {
+    path: "/",
+    element: <HomePage />,
+  },
+
+  /**
+   * -------------------------------------------------------------------------
+   * NOT FOUND
+   * -------------------------------------------------------------------------
+   *
+   * La ruta `*` funciona como fallback para cualquier URL que no
+   * coincida con las rutas anteriores.
+   */
+  {
+    path: "*",
+    element: <NotFoundPage />,
+  },
+];

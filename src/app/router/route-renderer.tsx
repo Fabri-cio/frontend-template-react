@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import type { AppRoute } from "./route.types";
+import { Suspense } from "react";
 
 /**
  * ===========================================================================
@@ -71,5 +72,9 @@ const renderRoute = (route: AppRoute, index: number) => {
 };
 
 export const RouteRenderer = ({ routes }: RouteRendererProps) => {
-  return <Routes>{routes.map(renderRoute)}</Routes>;
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <Routes>{routes.map(renderRoute)}</Routes>
+    </Suspense>
+  );
 };
