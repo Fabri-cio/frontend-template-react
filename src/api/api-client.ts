@@ -74,6 +74,33 @@ const normalizeHeaders = (
 };
 
 /**
+ * Copia headers de cualquier configuración de Axios
+ * hacia AxiosHeaders.
+ *
+ * Mantenemos esta conversión manual porque Axios permite
+ * diferentes representaciones de headers.
+ */
+const mergeHeaders = (
+  ...sources: Array<AxiosRequestConfig["headers"] | undefined>
+): AxiosHeaders => {
+  const headers = AxiosHeaders.from();
+
+  sources.forEach((source) => {
+    if (!source) {
+      return;
+    }
+
+    Object.entries(source).forEach(([name, value]) => {
+      if (value !== undefined && value !== null) {
+        headers.set(name, String(value));
+      }
+    });
+  });
+
+  return headers;
+};
+
+/**
  * ===========================================================================
  * ERROR NORMALIZATION
  * ===========================================================================
@@ -95,12 +122,13 @@ const normalizeApiError = <TData = unknown>(
       error instanceof Error ? error.message : "Error desconocido",
     ) as ApiError<TData>;
 
+    genericError.name = "ApiError";
     genericError.type = "unknown";
 
     return genericError;
   }
 
-  const axiosError = error as AxiosError<TData>;
+  const axiosError = error;
 
   const apiError = new Error(
     axiosError.message || "Error en la petición",
@@ -123,21 +151,15 @@ const normalizeApiError = <TData = unknown>(
 
 /**
  * ===========================================================================
- * AUTH
+ * AUTHENTICATION
  * ===========================================================================
  */
 
 /**
  * Aplica la autenticación configurada a una petición.
  *
- * El cliente NO sabe si utilizamos:
- *
- * - Bearer
- * - Token
- * - JWT
- * - API Key
- * - X-Auth-Token
- * - esquema personalizado
+ * El cliente NO sabe qué sistema de autenticación
+ * utiliza la aplicación.
  */
 const applyAuthentication = (
   config: AxiosRequestConfig,
@@ -147,28 +169,10 @@ const applyAuthentication = (
     return;
   }
 
-  const headers = AxiosHeaders.from();
-
-  /**
-   * Conservamos los headers que ya tenga la petición.
-   */
-  if (config.headers) {
-    Object.entries(config.headers).forEach(([name, value]) => {
-      if (value !== undefined) {
-        headers.set(name, String(value));
-      }
-    });
-  }
+  const headers = mergeHeaders(config.headers);
 
   /**
    * Headers personalizados de autenticación.
-   *
-   * Permite utilizar:
-   * - API keys
-   * - Bearer tokens
-   * - tenant IDs
-   * - headers personalizados
-   * - múltiples credenciales
    */
   if (auth.getHeaders) {
     const customHeaders = auth.getHeaders();
@@ -180,12 +184,6 @@ const applyAuthentication = (
 
   /**
    * Autenticación mediante token.
-   *
-   * Permite esquemas como:
-   * - Bearer
-   * - Token
-   * - JWT
-   * - cualquier esquema personalizado
    */
   if (auth.getToken) {
     const token = auth.getToken();
@@ -211,7 +209,7 @@ const applyAuthentication = (
 export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
   const {
     baseURL,
-    timeout = 10000,
+    timeout = 10_000,
     headers,
     auth,
     withCredentials = false,
@@ -222,13 +220,10 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
     axiosConfig,
   } = options;
 
-  /**
-   * Determina si estamos en desarrollo.
-   */
   const isDev = import.meta.env.DEV;
 
   /**
-   * Configuración inicial de Axios.
+   * Instancia Axios.
    */
   const instance: AxiosInstance = axios.create({
     baseURL,
@@ -239,10 +234,11 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
   });
 
   /**
-   * ========================================================================
+   * =========================================================================
    * REQUEST INTERCEPTOR
-   * ========================================================================
+   * =========================================================================
    */
+
   instance.interceptors.request.use(
     (config) => {
       /**
@@ -251,7 +247,8 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
       applyAuthentication(config, auth);
 
       /**
-       * Hook configurable antes de enviar la petición.
+       * Permitimos que la aplicación modifique
+       * la configuración antes de enviar la petición.
        */
       const modifiedConfig = onRequest?.(config);
 
@@ -259,20 +256,14 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
         Object.assign(config, modifiedConfig);
 
         if (modifiedConfig.headers) {
-          const headers = AxiosHeaders.from(config.headers);
-
-          Object.entries(modifiedConfig.headers).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-              headers.set(key, value);
-            }
-          });
-
-          config.headers = headers;
+          config.headers = mergeHeaders(config.headers, modifiedConfig.headers);
         }
       }
 
       /**
-       * Logging únicamente en desarrollo.
+       * Logging básico únicamente en desarrollo.
+       *
+       * No mostramos payloads.
        */
       if (isDev) {
         console.debug(
@@ -280,17 +271,19 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
           config.method?.toUpperCase(),
           config.url,
           config.params ?? "",
-          //   config.data ?? "",
         );
       }
 
       return config;
     },
-    (error) => {
+    (error: unknown) => {
       const apiError = normalizeApiError(error);
 
       if (isDev) {
-        console.error("[API] Request Error:", apiError);
+        console.error("[API] Request Error:", {
+          type: apiError.type,
+          message: apiError.message,
+        });
       }
 
       onError?.(apiError);
@@ -300,27 +293,27 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
   );
 
   /**
-   * ========================================================================
+   * =========================================================================
    * RESPONSE INTERCEPTOR
-   * ========================================================================
+   * =========================================================================
    */
+
   instance.interceptors.response.use(
     (response) => {
       /**
-       * Hook configurable después de recibir la respuesta.
+       * Observador configurable.
+       *
+       * No transforma ni reemplaza la respuesta.
        */
       onResponse?.(response);
 
       /**
-       * Logging únicamente en desarrollo.
+       * Logging básico únicamente en desarrollo.
+       *
+       * No mostramos response.data.
        */
       if (isDev) {
-        console.debug(
-          "[API] Response:",
-          response.status,
-          response.config.url,
-          response.data,
-        );
+        console.debug("[API] Response:", response.status, response.config.url);
       }
 
       return response;
@@ -333,22 +326,21 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
         console.error("[API] Response Error:", {
           type: apiError.type,
           status: apiError.status,
-          data: apiError.data,
           message: apiError.message,
         });
       }
 
       /**
-       * 401 configurable.
+       * HTTP 401.
        *
-       * El ApiClient no hace logout ni redirecciona.
+       * La aplicación decide qué hacer.
        */
       if (apiError.status === 401) {
         onUnauthorized?.(apiError);
       }
 
       /**
-       * Hook general de errores.
+       * Error global.
        */
       onError?.(apiError);
 
@@ -357,18 +349,14 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
   );
 
   /**
-   * ===========================================================================
-   * REQUEST
-   * ===========================================================================
+   * =========================================================================
+   * REQUEST EXECUTION
+   * =========================================================================
    */
 
   /**
-   * Ejecuta una petición HTTP y devuelve la respuesta completa de Axios.
-   *
-   * Este método es interno al cliente.
-   *
-   * Permite reutilizar exactamente la misma configuración
-   * para `request()` y `requestResponse()`.
+   * Ejecuta una petición HTTP y devuelve
+   * la respuesta completa de Axios.
    */
   const executeRequest = async <TResponse = unknown, TData = unknown>(
     requestOptions: ApiRequestOptions<TData>,
@@ -388,27 +376,23 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
 
       method,
       url,
-
-      /**
-       * Los valores específicos de la petición
-       * tienen prioridad.
-       */
       data,
       params,
       signal,
 
-      headers: {
-        ...(config.headers ?? {}),
-        ...(requestHeaders ?? {}),
-      },
+      /**
+       * Headers específicos de la petición
+       * tienen prioridad sobre los globales.
+       */
+      headers: mergeHeaders(config.headers, requestHeaders),
     };
 
     return instance.request<TResponse>(axiosRequestConfig);
   };
 
   /**
-   * Ejecuta una petición HTTP y devuelve únicamente
-   * el payload de la respuesta.
+   * Ejecuta una petición HTTP y devuelve
+   * únicamente el payload.
    */
   const request = async <TResponse = unknown, TData = unknown>(
     requestOptions: ApiRequestOptions<TData>,
@@ -419,12 +403,8 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
   };
 
   /**
-   * Ejecuta una petición HTTP y devuelve:
-   *
-   * - data
-   * - status
-   * - statusText
-   * - headers
+   * Ejecuta una petición HTTP y devuelve
+   * payload + metadata HTTP.
    */
   const requestResponse = async <TResponse = unknown, TData = unknown>(
     requestOptions: ApiRequestOptions<TData>,
@@ -440,9 +420,9 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
   };
 
   /**
-   * ========================================================================
+   * =========================================================================
    * HTTP METHODS
-   * ========================================================================
+   * =========================================================================
    */
 
   const get = async <TResponse = unknown>(
@@ -507,12 +487,12 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
   };
 
   /**
-   * ========================================================================
+   * =========================================================================
    * PUBLIC CLIENT
-   * ========================================================================
+   * =========================================================================
    */
 
-  const apiClient: ApiClient = {
+  return {
     instance,
     request,
     requestResponse,
@@ -522,6 +502,4 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
     patch,
     delete: deleteRequest,
   };
-
-  return apiClient;
 };

@@ -7,42 +7,16 @@ import type {
 
 /**
  * ===========================================================================
- * API CLIENT
+ * AUTHENTICATION
  * ===========================================================================
  */
 
-/**
- * Esquema de autenticación.
- *
- * Puede utilizar esquemas conocidos:
- * - Bearer
- * - Token
- * - JWT
- * - Basic
- *
- * o cualquier esquema personalizado.
- */
-export type AuthScheme = string;
-
-/**
- * Configuración de autenticación.
- *
- * El ApiClient NO sabe dónde se almacena el token.
- * El proyecto consumidor decide cómo obtenerlo.
- */
 export interface ApiAuthConfig {
   /**
    * Obtiene la credencial actual.
    *
-   * Puede venir de:
-   * - localStorage
-   * - sessionStorage
-   * - Context
-   * - Zustand
-   * - otra fuente
-   *
-   * Si se utiliza autenticación por cookies/HttpOnly,
-   * puede omitirse.
+   * Puede provenir de cualquier fuente controlada
+   * por la aplicación consumidora.
    */
   getToken?: () => string | null | undefined;
 
@@ -50,54 +24,40 @@ export interface ApiAuthConfig {
    * Esquema de autenticación.
    *
    * Ejemplos:
-   * Bearer
-   * Token
-   * JWT
+   * - Bearer
+   * - Token
+   * - JWT
+   * - Basic
+   * - cualquier esquema personalizado
    */
-  scheme?: AuthScheme;
+  scheme?: string;
 
   /**
    * Header donde se enviará la credencial.
    *
    * Por defecto:
    * Authorization
-   *
-   * Ejemplos:
-   * X-API-Key
-   * X-Auth-Token
    */
   headerName?: string;
 
   /**
-   * Permite generar headers personalizados dinámicamente.
+   * Permite generar headers dinámicos personalizados.
    *
    * Útil para:
    * - API keys
-   * - Bearer tokens
    * - tenant IDs
-   * - versiones de API
+   * - headers personalizados
    * - múltiples credenciales
-   * - cualquier header requerido por el backend
-   *
-   * Ejemplo:
-   *
-   * getHeaders: () => ({
-   *   Authorization: `Bearer ${getAccessToken()}`,
-   *   "X-Tenant-ID": getTenantId(),
-   * })
    */
   getHeaders?: () => Record<string, string>;
 }
 
 /**
  * ===========================================================================
- * API ERRORS
+ * ERRORS
  * ===========================================================================
  */
 
-/**
- * Categoría general de un error.
- */
 export type ApiErrorType =
   | "http"
   | "network"
@@ -108,100 +68,37 @@ export type ApiErrorType =
 /**
  * Error normalizado por nuestra capa API.
  *
- * IMPORTANTE:
- *
- * Nunca perdemos el error original de Axios ni la respuesta
- * original enviada por el backend.
+ * Conservamos tanto el payload original del backend
+ * como el error original de Axios.
  */
 export interface ApiError<TData = unknown> extends Error {
-  /**
-   * Tipo general del error.
-   */
   type: ApiErrorType;
-
-  /**
-   * Código HTTP cuando existe.
-   *
-   * Ejemplos:
-   * 400
-   * 401
-   * 403
-   * 404
-   * 409
-   * 422
-   * 429
-   * 500
-   */
   status?: number;
-
-  /**
-   * Payload original enviado por el backend.
-   *
-   * Puede tener cualquier estructura.
-   */
   data?: TData;
-
-  /**
-   * Headers de la respuesta.
-   */
   headers?: Record<string, string>;
-
-  /**
-   * Configuración de la petición que produjo el error.
-   */
   config?: AxiosRequestConfig;
-
-  /**
-   * Error original de Axios.
-   */
   originalError?: AxiosError<TData>;
 }
 
 /**
  * ===========================================================================
- * API RESPONSE
+ * RESPONSE
  * ===========================================================================
  */
 
-/**
- * Representación opcional de una respuesta HTTP.
- *
- * NO es obligatorio que todos los backends utilicen esta estructura.
- *
- * Se puede utilizar cuando una parte de la aplicación necesita
- * trabajar con metadata HTTP además del payload.
- */
 export interface ApiResponse<TData = unknown> {
-  /**
-   * Payload devuelto por el backend.
-   */
   data: TData;
-
-  /**
-   * Código HTTP.
-   */
   status: number;
-
-  /**
-   * Texto asociado al status.
-   */
   statusText?: string;
-
-  /**
-   * Headers de respuesta.
-   */
   headers?: Record<string, string>;
 }
 
 /**
  * ===========================================================================
- * HTTP REQUEST
+ * REQUEST
  * ===========================================================================
  */
 
-/**
- * Métodos HTTP soportados.
- */
 export type HttpMethod =
   | "GET"
   | "POST"
@@ -211,140 +108,46 @@ export type HttpMethod =
   | "HEAD"
   | "OPTIONS";
 
-/**
- * Valores permitidos para query parameters.
- *
- * Se mantiene flexible para soportar diferentes APIs.
- */
 export type ApiQueryParamValue = string | number | boolean | null | undefined;
 
-/**
- * Query parameters.
- *
- * Ejemplo:
- *
- * {
- *   page: 1,
- *   search: "laptop",
- *   active: true
- * }
- *
- * También permite parámetros personalizados.
- */
 export type ApiQueryParams = Record<
   string,
   ApiQueryParamValue | ApiQueryParamValue[]
 >;
 
-/**
- * Opciones de una petición HTTP.
- */
 export interface ApiRequestOptions<TData = unknown> {
-  /**
-   * Método HTTP.
-   */
   method: HttpMethod;
-
-  /**
-   * URL relativa o absoluta.
-   */
   url: string;
-
-  /**
-   * Datos enviados al backend.
-   *
-   * Puede ser:
-   * - JSON
-   * - FormData
-   * - Blob
-   * - File
-   * - ArrayBuffer
-   * - texto
-   * - cualquier otro payload
-   */
   data?: TData;
-
-  /**
-   * Query parameters.
-   */
   params?: ApiQueryParams;
-
-  /**
-   * Headers específicos de esta petición.
-   *
-   * Tienen prioridad sobre los headers globales.
-   */
   headers?: Record<string, string>;
-
-  /**
-   * Permite cancelar la petición.
-   *
-   * Compatible con AbortController,
-   * React Query y Axios.
-   */
   signal?: AbortSignal;
-
-  /**
-   * Configuración adicional de Axios.
-   *
-   * Permite utilizar funcionalidades específicas
-   * de Axios sin limitar nuestra abstracción.
-   */
   config?: AxiosRequestConfig;
 }
 
 /**
  * ===========================================================================
- * API CLIENT OPTIONS
+ * CLIENT OPTIONS
  * ===========================================================================
  */
 
-/**
- * Configuración general del cliente.
- */
 export interface ApiClientOptions {
-  /**
-   * URL base del backend.
-   */
   baseURL?: string;
-
-  /**
-   * Tiempo máximo de espera de una petición.
-   */
   timeout?: number;
-
-  /**
-   * Headers globales.
-   */
   headers?: Record<string, string>;
-
-  /**
-   * Configuración de autenticación.
-   */
   auth?: ApiAuthConfig;
-
-  /**
-   * Permite enviar cookies automáticamente.
-   *
-   * Útil para:
-   * - sesiones
-   * - cookies HttpOnly
-   * - CSRF
-   * - autenticación basada en cookies
-   */
   withCredentials?: boolean;
 
   /**
-   * Se ejecuta antes de enviar una petición.
-   *
-   * Permite modificar la configuración.
+   * Permite modificar la configuración
+   * antes de enviar una petición.
    */
   onRequest?: (config: AxiosRequestConfig) => AxiosRequestConfig | void;
 
   /**
-   * Se ejecuta cuando se recibe una respuesta exitosa.
+   * Observa una respuesta exitosa.
    *
-   * No obliga a modificar la respuesta.
+   * No reemplaza ni transforma la respuesta.
    */
   onResponse?: <T>(response: AxiosResponse<T>) => void;
 
@@ -356,19 +159,17 @@ export interface ApiClientOptions {
   /**
    * Se ejecuta específicamente ante HTTP 401.
    *
-   * El ApiClient NO decide si debe:
-   * - hacer logout
-   * - renovar token
-   * - redirigir
-   *
-   * Eso lo decide la aplicación.
+   * La aplicación decide qué hacer:
+   * - logout
+   * - refresh token
+   * - redirect
+   * - etc.
    */
   onUnauthorized?: (error: ApiError) => void;
 
   /**
-   * Configuración adicional de Axios.
-   *
-   * Permite casos avanzados sin romper nuestra abstracción.
+   * Permite utilizar opciones específicas de Axios
+   * sin limitar nuestra abstracción.
    */
   axiosConfig?: AxiosRequestConfig;
 }
@@ -379,89 +180,53 @@ export interface ApiClientOptions {
  * ===========================================================================
  */
 
-/**
- * Contrato público de nuestro cliente HTTP.
- *
- * Aunque actualmente usamos Axios internamente,
- * la aplicación trabaja contra este contrato.
- */
 export interface ApiClient {
   /**
-   * Instancia interna de Axios.
+   * Instancia Axios subyacente.
    *
    * Disponible para casos avanzados.
    */
   instance: AxiosInstance;
 
   /**
-   * Petición HTTP genérica.
-   *
-   * TResponse:
-   * tipo esperado de respuesta.
-   *
-   * TData:
-   * tipo de datos enviados.
+   * Ejecuta una petición y devuelve únicamente
+   * el payload.
    */
   request<TResponse = unknown, TData = unknown>(
     options: ApiRequestOptions<TData>,
   ): Promise<TResponse>;
 
   /**
-   * Petición HTTP que devuelve el payload junto
-   * con información de la respuesta HTTP.
-   *
-   * Útil cuando necesitamos:
-   * - status
-   * - headers
-   * - metadata HTTP
-   * - ETag
-   * - Location
-   * - Content-Disposition
-   * - rate limits
-   * - etc.
+   * Ejecuta una petición y devuelve también
+   * información HTTP de la respuesta.
    */
   requestResponse<TResponse = unknown, TData = unknown>(
     options: ApiRequestOptions<TData>,
   ): Promise<ApiResponse<TResponse>>;
 
-  /**
-   * GET.
-   */
   get<TResponse = unknown>(
     url: string,
     options?: Omit<ApiRequestOptions, "method" | "url" | "data">,
   ): Promise<TResponse>;
 
-  /**
-   * POST.
-   */
   post<TResponse = unknown, TData = unknown>(
     url: string,
     data?: TData,
     options?: Omit<ApiRequestOptions, "method" | "url" | "data">,
   ): Promise<TResponse>;
 
-  /**
-   * PUT.
-   */
   put<TResponse = unknown, TData = unknown>(
     url: string,
     data?: TData,
     options?: Omit<ApiRequestOptions, "method" | "url" | "data">,
   ): Promise<TResponse>;
 
-  /**
-   * PATCH.
-   */
   patch<TResponse = unknown, TData = unknown>(
     url: string,
     data?: TData,
     options?: Omit<ApiRequestOptions, "method" | "url" | "data">,
   ): Promise<TResponse>;
 
-  /**
-   * DELETE.
-   */
   delete<TResponse = unknown>(
     url: string,
     options?: Omit<ApiRequestOptions, "method" | "url" | "data">,
@@ -474,55 +239,28 @@ export interface ApiClient {
  * ===========================================================================
  */
 
-/**
- * Identificador genérico de una entidad.
- *
- * Soporta:
- * - números
- * - strings
- * - UUID
- */
 export type EntityId = string | number;
 
-/**
- * Método HTTP utilizado para actualizar una entidad
- * mediante las operaciones CRUD genéricas.
- *
- * Algunos backends utilizan PUT y otros PATCH.
- */
 export type CrudUpdateMethod = "PUT" | "PATCH";
 
 /**
  * Parámetros genéricos de una colección.
  *
- * No imponemos nombres como:
+ * No asumimos:
  * - page
  * - limit
  * - offset
  * - search
  * - ordering
- *
- * Cada API concreta define los parámetros que necesita.
+ * - filtros específicos
  */
 export type CrudListParams = ApiQueryParams;
 
 /**
- * Contrato genérico de operaciones CRUD.
+ * Contrato de operaciones CRUD genéricas.
  *
- * TEntity:
- * entidad principal.
- *
- * TCreate:
- * payload utilizado para crear.
- *
- * TUpdate:
- * payload utilizado para actualizar.
- *
- * TListResponse:
- * respuesta completa del endpoint de listado.
- *
- * Esto es importante porque NO asumimos que el backend
- * devuelve directamente TEntity[].
+ * No asumimos que todas las APIs utilicen CRUD.
+ * Esta abstracción es únicamente una utilidad opcional.
  */
 export interface CrudOperations<
   TEntity,
@@ -532,33 +270,13 @@ export interface CrudOperations<
   TParams extends CrudListParams = CrudListParams,
   TDeleteResponse = void,
 > {
-  /**
-   * Obtener colección. filtered
-   */
   list(params?: TParams): Promise<TListResponse>;
 
-  /**
-   * Obtener una entidad.
-   */
   getOne(id: EntityId): Promise<TEntity>;
 
-  /**
-   * Crear entidad.
-   */
   create(data: TCreate): Promise<TEntity>;
 
-  /**
-   * Actualizar entidad.
-   */
   update(id: EntityId, data: TUpdate): Promise<TEntity>;
 
-  /**
-   * Eliminar entidad.
-   *
-   * Algunos backends devuelven 204 sin contenido.
-   * Otros devuelven la entidad eliminada o algún payload.
-   */
   delete(id: EntityId): Promise<TDeleteResponse>;
 }
-
-

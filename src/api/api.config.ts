@@ -2,56 +2,107 @@ import { createApiClient } from "./api-client";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+/**
+ * ===========================================================================
+ * API INSTANCE
+ * ===========================================================================
+ *
+ * Instancia HTTP principal de la aplicación.
+ *
+ * La infraestructura genérica vive en `api-client.ts`.
+ * Este archivo únicamente define la configuración específica
+ * de este proyecto.
+ */
 export const api = createApiClient({
+  /**
+   * URL base del backend.
+   *
+   * Ejemplo:
+   * VITE_API_BASE_URL=https://api.example.com
+   */
   baseURL: API_BASE_URL,
 
+  /**
+   * Tiempo máximo de espera por petición.
+   */
   timeout: 10_000,
 
+  /**
+   * Headers globales.
+   *
+   * No agregamos Content-Type aquí porque Axios puede
+   * determinarlo automáticamente según el tipo de payload,
+   * especialmente para FormData.
+   */
   headers: {
     Accept: "application/json",
   },
 
   /**
-   * Autenticación configurable.
+   * Autenticación.
    *
-   * Por ahora no asumimos ningún sistema de autenticación.
+   * Por ahora no imponemos ningún sistema.
    *
-   * Cuando definamos cómo manejará la aplicación
-   * el token/sesión, configuraremos esta parte.
+   * Cuando el proyecto implemente autenticación, podremos
+   * configurar:
+   *
+   * - Bearer Token
+   * - JWT
+   * - API Key
+   * - Headers personalizados
+   * - Multi-tenant
+   *
+   * Ejemplo:
+   *
+   * auth: {
+   *   getToken: () => tokenStorage.getAccessToken(),
+   *   scheme: "Bearer",
+   * }
    */
-  //   auth: undefined,
+  // auth: undefined,
 
   /**
-   * Permite autenticación basada en cookies
-   * si el backend lo necesita.
+   * Cookies cross-origin.
+   *
+   * Se cambia a true únicamente si el backend utiliza
+   * autenticación basada en cookies/sesiones.
    */
   withCredentials: false,
 
   /**
-   * Se ejecuta cuando el backend responde 401.
+   * Manejo específico de respuestas HTTP 401.
    *
-   * IMPORTANTE:
+   * Este cliente no decide automáticamente hacer logout
+   * ni navegar a una ruta.
    *
-   * Aquí todavía no hacemos logout ni navegación.
-   * Eso lo conectaremos posteriormente con AuthContext
-   * o nuestro sistema de autenticación.
+   * Esa lógica pertenece a la capa de autenticación
+   * de la aplicación.
    */
   onUnauthorized: (error) => {
     if (import.meta.env.DEV) {
-      console.warn("[API] Unauthorized:", error);
+      console.warn("[API] Unauthorized:", {
+        status: error.status,
+        message: error.message,
+      });
     }
   },
 
   /**
-   * Manejo global de errores.
+   * Observador global de errores.
    *
-   * No mostramos toast aquí.
+   * No mostramos toasts aquí.
+   * No navegamos aquí.
    *
-   * Los errores de UI pertenecen a React/React Query.
+   * La infraestructura HTTP solamente informa del error.
+   * La capa superior decide cómo reaccionar.
    */
   onError: (error) => {
     if (import.meta.env.DEV) {
-      console.error("[API] Error:", error);
+      console.error("[API] Error:", {
+        type: error.type,
+        status: error.status,
+        message: error.message,
+      });
     }
   },
 });
