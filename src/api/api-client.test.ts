@@ -604,7 +604,7 @@ describe("createApiClient", () => {
    */
 
   describe("error normalization", () => {
-    it("normaliza un error HTTP", async () => {
+    it("normaliza un error HTTP a AppError", async () => {
       const api = createApiClient();
 
       api.instance.defaults.adapter = createErrorAdapter(
@@ -615,17 +615,32 @@ describe("createApiClient", () => {
         "Bad Request",
       );
 
-      await expect(api.get("/users")).rejects.toMatchObject({
-        name: "ApiError",
-        type: "http",
-        status: 400,
-        data: {
+      try {
+        await api.get("/users");
+
+        throw new Error("La petición debería haber fallado");
+      } catch (error) {
+        expect(error).toMatchObject({
+          name: "AppError",
+          code: "UNKNOWN_ERROR",
+          message: "Request failed with status 400",
+        });
+
+        expect(error).toHaveProperty("cause");
+
+        const appError = error as {
+          cause?: AxiosError;
+        };
+
+        expect(appError.cause).toBeInstanceOf(AxiosError);
+        expect(appError.cause?.response?.status).toBe(400);
+        expect(appError.cause?.response?.data).toEqual({
           message: "Invalid data",
-        },
-      });
+        });
+      }
     });
 
-    it("conserva el error original de Axios", async () => {
+    it("conserva el error original de Axios como cause", async () => {
       const api = createApiClient();
 
       let originalError: AxiosError | undefined;
@@ -657,10 +672,11 @@ describe("createApiClient", () => {
         throw new Error("La petición debería haber fallado");
       } catch (error) {
         expect(error).toMatchObject({
-          name: "ApiError",
-          type: "http",
-          originalError,
+          name: "AppError",
+          code: "UNKNOWN_ERROR",
         });
+
+        expect(error).toHaveProperty("cause", originalError);
       }
     });
 
@@ -679,17 +695,23 @@ describe("createApiClient", () => {
         "Not Found",
       );
 
-      await expect(api.get("/users/999")).rejects.toMatchObject({
-        type: "http",
-        status: 404,
-      });
+      try {
+        await api.get("/users/999");
+
+        throw new Error("La petición debería haber fallado");
+      } catch (error) {
+        expect(error).toMatchObject({
+          name: "AppError",
+          code: "NOT_FOUND",
+        });
+      }
 
       expect(onError).toHaveBeenCalledTimes(1);
 
       expect(onError).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: "http",
-          status: 404,
+          name: "AppError",
+          code: "NOT_FOUND",
         }),
       );
     });
@@ -709,17 +731,23 @@ describe("createApiClient", () => {
         "Unauthorized",
       );
 
-      await expect(api.get("/users")).rejects.toMatchObject({
-        type: "http",
-        status: 401,
-      });
+      try {
+        await api.get("/users");
+
+        throw new Error("La petición debería haber fallado");
+      } catch (error) {
+        expect(error).toMatchObject({
+          name: "AppError",
+          code: "UNAUTHORIZED",
+        });
+      }
 
       expect(onUnauthorized).toHaveBeenCalledTimes(1);
 
       expect(onUnauthorized).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: "http",
-          status: 401,
+          name: "AppError",
+          code: "UNAUTHORIZED",
         }),
       );
     });

@@ -1,11 +1,9 @@
 import { createApiClient } from "./api-client";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 /**
- * ===========================================================================
+ * ============================================================================
  * API INSTANCE
- * ===========================================================================
+ * ============================================================================
  *
  * Instancia HTTP principal de la aplicación.
  *
@@ -13,6 +11,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
  * Este archivo únicamente define la configuración específica
  * de este proyecto.
  */
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const api = createApiClient({
   /**
    * URL base del backend.
@@ -59,7 +60,6 @@ export const api = createApiClient({
    *   scheme: "Bearer",
    * }
    */
-  // auth: undefined,
 
   /**
    * Cookies cross-origin.
@@ -81,7 +81,7 @@ export const api = createApiClient({
   onUnauthorized: (error) => {
     if (import.meta.env.DEV) {
       console.warn("[API] Unauthorized:", {
-        status: error.status,
+        code: error.code,
         message: error.message,
       });
     }
@@ -99,9 +99,9 @@ export const api = createApiClient({
   onError: (error) => {
     if (import.meta.env.DEV) {
       console.error("[API] Error:", {
-        type: error.type,
-        status: error.status,
+        code: error.code,
         message: error.message,
+        details: error.details,
       });
     }
   },

@@ -1,22 +1,28 @@
-import type {
-  AxiosError,
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosResponse,
-} from "axios";
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+
+import type { AppError } from "../app/errors/app-error";
 
 /**
- * ===========================================================================
+ * ============================================================================
  * AUTHENTICATION
- * ===========================================================================
+ * ============================================================================
+ *
+ * Configuración opcional de autenticación.
+ *
+ * Este contrato no asume:
+ *
+ * - JWT
+ * - Bearer
+ * - cookies
+ * - localStorage
+ * - sesiones
+ *
+ * La aplicación consumidora decide cómo obtener y enviar sus credenciales.
  */
 
 export interface ApiAuthConfig {
   /**
    * Obtiene la credencial actual.
-   *
-   * Puede provenir de cualquier fuente controlada
-   * por la aplicación consumidora.
    */
   getToken?: () => string | null | undefined;
 
@@ -33,7 +39,7 @@ export interface ApiAuthConfig {
   scheme?: string;
 
   /**
-   * Header donde se enviará la credencial.
+   * Nombre del header donde se enviará la credencial.
    *
    * Por defecto:
    * Authorization
@@ -53,37 +59,22 @@ export interface ApiAuthConfig {
 }
 
 /**
- * ===========================================================================
- * ERRORS
- * ===========================================================================
- */
-
-export type ApiErrorType =
-  | "http"
-  | "network"
-  | "timeout"
-  | "cancelled"
-  | "unknown";
-
-/**
- * Error normalizado por nuestra capa API.
- *
- * Conservamos tanto el payload original del backend
- * como el error original de Axios.
- */
-export interface ApiError<TData = unknown> extends Error {
-  type: ApiErrorType;
-  status?: number;
-  data?: TData;
-  headers?: Record<string, string>;
-  config?: AxiosRequestConfig;
-  originalError?: AxiosError<TData>;
-}
-
-/**
- * ===========================================================================
+ * ============================================================================
  * RESPONSE
- * ===========================================================================
+ * ============================================================================
+ *
+ * Representa la información HTTP de una respuesta exitosa.
+ *
+ * No impone ningún envelope específico al payload.
+ *
+ * El backend puede devolver:
+ *
+ * - un objeto
+ * - un array
+ * - un string
+ * - un número
+ * - null
+ * - cualquier otra estructura
  */
 
 export interface ApiResponse<TData = unknown> {
@@ -94,9 +85,9 @@ export interface ApiResponse<TData = unknown> {
 }
 
 /**
- * ===========================================================================
+ * ============================================================================
  * REQUEST
- * ===========================================================================
+ * ============================================================================
  */
 
 export type HttpMethod =
@@ -107,6 +98,20 @@ export type HttpMethod =
   | "DELETE"
   | "HEAD"
   | "OPTIONS";
+
+/**
+ * Valores permitidos para parámetros de consulta.
+ *
+ * No asumimos nombres concretos como:
+ *
+ * - page
+ * - limit
+ * - offset
+ * - search
+ * - ordering
+ *
+ * Cada feature puede definir sus propios parámetros.
+ */
 
 export type ApiQueryParamValue = string | number | boolean | null | undefined;
 
@@ -126,21 +131,39 @@ export interface ApiRequestOptions<TData = unknown> {
 }
 
 /**
- * ===========================================================================
+ * ============================================================================
  * CLIENT OPTIONS
- * ===========================================================================
+ * ============================================================================
  */
 
 export interface ApiClientOptions {
+  /**
+   * URL base del servicio.
+   */
   baseURL?: string;
+
+  /**
+   * Timeout de las peticiones en milisegundos.
+   */
   timeout?: number;
+
+  /**
+   * Headers globales.
+   */
   headers?: Record<string, string>;
+
+  /**
+   * Configuración opcional de autenticación.
+   */
   auth?: ApiAuthConfig;
+
+  /**
+   * Permite utilizar cookies en peticiones cross-origin.
+   */
   withCredentials?: boolean;
 
   /**
-   * Permite modificar la configuración
-   * antes de enviar una petición.
+   * Permite modificar la configuración antes de enviar una petición.
    */
   onRequest?: (config: AxiosRequestConfig) => AxiosRequestConfig | void;
 
@@ -152,32 +175,40 @@ export interface ApiClientOptions {
   onResponse?: <T>(response: AxiosResponse<T>) => void;
 
   /**
-   * Se ejecuta ante cualquier error.
+   * Se ejecuta ante cualquier error normalizado de la API.
+   *
+   * La aplicación recibe el contrato genérico `AppError`,
+   * independientemente de que el error original provenga de Axios,
+   * Fetch o cualquier otra implementación.
    */
-  onError?: (error: ApiError) => void;
+  onError?: (error: AppError) => void;
 
   /**
-   * Se ejecuta específicamente ante HTTP 401.
+   * Se ejecuta específicamente cuando la API responde HTTP 401.
    *
    * La aplicación decide qué hacer:
+   *
    * - logout
    * - refresh token
    * - redirect
+   * - mostrar una pantalla
    * - etc.
    */
-  onUnauthorized?: (error: ApiError) => void;
+  onUnauthorized?: (error: AppError) => void;
 
   /**
    * Permite utilizar opciones específicas de Axios
    * sin limitar nuestra abstracción.
+   *
+   * Es un escape hatch deliberado para casos avanzados.
    */
   axiosConfig?: AxiosRequestConfig;
 }
 
 /**
- * ===========================================================================
+ * ============================================================================
  * API CLIENT
- * ===========================================================================
+ * ============================================================================
  */
 
 export interface ApiClient {
@@ -189,8 +220,7 @@ export interface ApiClient {
   instance: AxiosInstance;
 
   /**
-   * Ejecuta una petición y devuelve únicamente
-   * el payload.
+   * Ejecuta una petición y devuelve únicamente el payload.
    */
   request<TResponse = unknown, TData = unknown>(
     options: ApiRequestOptions<TData>,
@@ -204,29 +234,44 @@ export interface ApiClient {
     options: ApiRequestOptions<TData>,
   ): Promise<ApiResponse<TResponse>>;
 
+  /**
+   * HTTP GET.
+   */
   get<TResponse = unknown>(
     url: string,
     options?: Omit<ApiRequestOptions, "method" | "url" | "data">,
   ): Promise<TResponse>;
 
+  /**
+   * HTTP POST.
+   */
   post<TResponse = unknown, TData = unknown>(
     url: string,
     data?: TData,
     options?: Omit<ApiRequestOptions, "method" | "url" | "data">,
   ): Promise<TResponse>;
 
+  /**
+   * HTTP PUT.
+   */
   put<TResponse = unknown, TData = unknown>(
     url: string,
     data?: TData,
     options?: Omit<ApiRequestOptions, "method" | "url" | "data">,
   ): Promise<TResponse>;
 
+  /**
+   * HTTP PATCH.
+   */
   patch<TResponse = unknown, TData = unknown>(
     url: string,
     data?: TData,
     options?: Omit<ApiRequestOptions, "method" | "url" | "data">,
   ): Promise<TResponse>;
 
+  /**
+   * HTTP DELETE.
+   */
   delete<TResponse = unknown>(
     url: string,
     options?: Omit<ApiRequestOptions, "method" | "url" | "data">,
@@ -234,9 +279,9 @@ export interface ApiClient {
 }
 
 /**
- * ===========================================================================
+ * ============================================================================
  * CRUD
- * ===========================================================================
+ * ============================================================================
  */
 
 export type EntityId = string | number;
@@ -247,6 +292,7 @@ export type CrudUpdateMethod = "PUT" | "PATCH";
  * Parámetros genéricos de una colección.
  *
  * No asumimos:
+ *
  * - page
  * - limit
  * - offset

@@ -1,5 +1,4 @@
 import axios, {
-  AxiosError,
   AxiosHeaders,
   type AxiosInstance,
   type AxiosRequestConfig,
@@ -10,40 +9,17 @@ import type {
   ApiAuthConfig,
   ApiClient,
   ApiClientOptions,
-  ApiError,
-  ApiErrorType,
   ApiRequestOptions,
   ApiResponse,
 } from "./api.types";
+
+import { normalizeApiError } from "./api-error";
 
 /**
  * ===========================================================================
  * HELPERS
  * ===========================================================================
  */
-
-/**
- * Determina el tipo de error de nuestra capa API.
- */
-const getApiErrorType = (error: AxiosError): ApiErrorType => {
-  if (axios.isCancel(error)) {
-    return "cancelled";
-  }
-
-  if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
-    return "timeout";
-  }
-
-  if (error.response) {
-    return "http";
-  }
-
-  if (error.request) {
-    return "network";
-  }
-
-  return "unknown";
-};
 
 /**
  * Normaliza los headers de Axios a un objeto simple.
@@ -98,55 +74,6 @@ const mergeHeaders = (
   });
 
   return headers;
-};
-
-/**
- * ===========================================================================
- * ERROR NORMALIZATION
- * ===========================================================================
- */
-
-/**
- * Convierte cualquier error de Axios en nuestro ApiError.
- *
- * IMPORTANTE:
- *
- * No destruimos el error original.
- * Lo conservamos dentro de `originalError`.
- */
-const normalizeApiError = <TData = unknown>(
-  error: unknown,
-): ApiError<TData> => {
-  if (!axios.isAxiosError<TData>(error)) {
-    const genericError = new Error(
-      error instanceof Error ? error.message : "Error desconocido",
-    ) as ApiError<TData>;
-
-    genericError.name = "ApiError";
-    genericError.type = "unknown";
-
-    return genericError;
-  }
-
-  const axiosError = error;
-
-  const apiError = new Error(
-    axiosError.message || "Error en la petición",
-  ) as ApiError<TData>;
-
-  apiError.name = "ApiError";
-  apiError.type = getApiErrorType(axiosError);
-
-  if (axiosError.response) {
-    apiError.status = axiosError.response.status;
-    apiError.data = axiosError.response.data;
-    apiError.headers = normalizeHeaders(axiosError.response.headers);
-  }
-
-  apiError.config = axiosError.config;
-  apiError.originalError = axiosError;
-
-  return apiError;
 };
 
 /**
@@ -281,7 +208,7 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
 
       if (isDev) {
         console.error("[API] Request Error:", {
-          type: apiError.type,
+          code: apiError.code,
           message: apiError.message,
         });
       }
@@ -320,22 +247,32 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
     },
 
     (error: unknown) => {
-      const apiError = normalizeApiError(error);
+      /**
+       * Extraemos el status HTTP antes de normalizar el error.
+       *
+       * AppError no depende de HTTP, por lo que el status solamente
+       * se utiliza como información de entrada para la normalización.
+       */
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined;
+
+      const apiError = normalizeApiError(error, {
+        status,
+      });
 
       if (isDev) {
         console.error("[API] Response Error:", {
-          type: apiError.type,
-          status: apiError.status,
+          code: apiError.code,
           message: apiError.message,
         });
       }
 
       /**
-       * HTTP 401.
-       *
-       * La aplicación decide qué hacer.
+       * La aplicación decide qué hacer ante un error
+       * de autenticación.
        */
-      if (apiError.status === 401) {
+      if (apiError.code === "UNAUTHORIZED") {
         onUnauthorized?.(apiError);
       }
 
