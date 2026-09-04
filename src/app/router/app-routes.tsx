@@ -1,7 +1,7 @@
 import { lazy } from "react";
+import { Navigate } from "react-router-dom";
 
 import type { AppRoute } from "./route.types";
-import { Navigate } from "react-router-dom";
 
 const HomePage = lazy(() => import("../../pages/home/home-page"));
 
@@ -21,10 +21,15 @@ const DashboardPage = lazy(
  * Configuración de rutas específica de la aplicación.
  *
  * El router genérico únicamente interpreta esta estructura.
+ *
+ * Este archivo puede comenzar siendo pequeño y crecer mediante composición
+ * de grupos de rutas cuando la aplicación aumente de tamaño.
  */
 export const appRoutes: AppRoute[] = [
   /**
-   * Ruta pública.
+   * --------------------------------------------------------------------------
+   * PUBLIC ROUTES
+   * --------------------------------------------------------------------------
    */
   {
     path: "/",
@@ -32,7 +37,11 @@ export const appRoutes: AppRoute[] = [
   },
 
   /**
-   * Grupo de rutas que comparten un layout.
+   * --------------------------------------------------------------------------
+   * APPLICATION LAYOUT
+   * --------------------------------------------------------------------------
+   *
+   * Las rutas hijas comparten el mismo layout.
    */
   {
     element: <AppLayout />,
@@ -49,9 +58,9 @@ export const appRoutes: AppRoute[] = [
    * REDIRECT
    * --------------------------------------------------------------------------
    *
-   * Ejemplo de una redirección configurada por la aplicación.
+   * Los redirects forman parte de la configuración de la aplicación.
    *
-   * El router genérico no necesita conocer ninguna lógica especial
+   * El router genérico no necesita conocer ninguna lógica específica
    * de redirects.
    */
   {
@@ -60,7 +69,9 @@ export const appRoutes: AppRoute[] = [
   },
 
   /**
-   * Fallback.
+   * --------------------------------------------------------------------------
+   * FALLBACK
+   * --------------------------------------------------------------------------
    */
   {
     path: "*",

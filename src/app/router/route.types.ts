@@ -24,16 +24,26 @@ export interface RouteMeta {
 }
 
 /**
- * ============================================================================
+ * ===========================================================================
  * APPLICATION ROUTE
- * ============================================================================
+ * ===========================================================================
  *
  * Representa una ruta independiente de la implementación concreta
  * del dominio de la aplicación.
  *
- * Permite construir árboles de rutas mediante `children`.
+ * Las rutas pueden ser:
+ *
+ * - rutas normales con `path`
+ * - rutas sin path que funcionan como layouts/contenedores
+ * - rutas índice
  */
-export interface AppRoute {
+
+/**
+ * Ruta normal.
+ *
+ * Puede tener `path` y opcionalmente `children`.
+ */
+export interface StandardRoute {
   /**
    * Ruta.
    *
@@ -45,17 +55,12 @@ export interface AppRoute {
    * ":id"
    * "*"
    */
-  path?: string;
+  path: string;
 
   /**
    * Componente que representa la ruta.
    */
   element?: ReactNode;
-
-  /**
-   * Indica una ruta índice dentro de una ruta padre.
-   */
-  index?: boolean;
 
   /**
    * Rutas hijas.
@@ -64,5 +69,81 @@ export interface AppRoute {
    */
   children?: AppRoute[];
 
+  /**
+   * Una ruta normal nunca es una ruta índice.
+   */
+  index?: false;
+
   meta?: RouteMeta;
 }
+
+/**
+ * Ruta contenedora sin path.
+ *
+ * Es útil para layouts que agrupan rutas hijas.
+ *
+ * Ejemplo:
+ *
+ * {
+ *   element: <AppLayout />,
+ *   children: [...]
+ * }
+ */
+export interface PathlessRoute {
+  /**
+   * No puede definir un path.
+   */
+  path?: never;
+
+  /**
+   * Componente que representa el layout/contenedor.
+   */
+  element?: ReactNode;
+
+  /**
+   * Una ruta sin path debe contener rutas hijas.
+   */
+  children: AppRoute[];
+
+  /**
+   * Una ruta contenedora nunca es una ruta índice.
+   */
+  index?: false;
+
+  meta?: RouteMeta;
+}
+
+/**
+ * Ruta índice.
+ *
+ * Una ruta índice pertenece a una ruta padre y representa
+ * su contenido por defecto.
+ */
+export interface IndexRoute {
+  /**
+   * Identifica explícitamente una ruta índice.
+   */
+  index: true;
+
+  /**
+   * Una ruta índice no puede definir un path.
+   */
+  path?: never;
+
+  /**
+   * Una ruta índice no puede tener rutas hijas.
+   */
+  children?: never;
+
+  /**
+   * Componente que representa la ruta.
+   */
+  element?: ReactNode;
+
+  meta?: RouteMeta;
+}
+
+/**
+ * Unión de todas las formas válidas de rutas.
+ */
+export type AppRoute = StandardRoute | PathlessRoute | IndexRoute;

@@ -119,8 +119,6 @@ export const RouteGuard = ({
    * --------------------------------------------------------------------------
    * PENDING
    * --------------------------------------------------------------------------
-   *
-   * La aplicación todavía no puede determinar si la ruta es accesible.
    */
   if (accessResult === "pending") {
     return pendingFallback ? <>{pendingFallback}</> : <div>Cargando...</div>;
@@ -137,8 +135,11 @@ export const RouteGuard = ({
 
   /**
    * --------------------------------------------------------------------------
-   * DENIED, CUSTOM FALLBACK
+   * DENIED
    * --------------------------------------------------------------------------
+   *
+   * Si la aplicación proporciona un fallback personalizado,
+   * utilizamos ese contenido.
    */
   if (fallback) {
     return <>{fallback}</>;
