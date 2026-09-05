@@ -3,6 +3,10 @@ import { Navigate } from "react-router-dom";
 
 import type { AppRoute } from "./route.types";
 
+const UiPlaygroundPage = lazy(
+  () => import("../../pages/ui-playground/ui-playground-page"),
+);
+
 const HomePage = lazy(() => import("../../pages/home/home-page"));
 
 const NotFoundPage = lazy(() => import("../../pages/not-found/not-found-page"));
@@ -76,5 +80,15 @@ export const appRoutes: AppRoute[] = [
   {
     path: "*",
     element: <NotFoundPage />,
+  },
+
+  /**
+   * --------------------------------------------------------------------------
+   * UI PLAYGROUND
+   * --------------------------------------------------------------------------
+   */
+  {
+    path: "/ui-playground",
+    element: <UiPlaygroundPage />,
   },
 ];
