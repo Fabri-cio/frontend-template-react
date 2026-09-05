@@ -20,16 +20,16 @@ export interface ApiErrorContext {
   /**
    * Mensaje normalizado que debe utilizar la aplicación.
    *
-   * Si no se proporciona, se utilizará el mensaje del error original cuando
-   * sea posible.
+   * Si no se proporciona un mensaje válido, se utilizará el mensaje
+   * del error original cuando sea posible.
    */
   message?: string;
 
   /**
    * Información adicional proporcionada por la capa API.
    *
-   * La estructura permanece abierta para evitar acoplamiento con un backend
-   * específico.
+   * La estructura permanece abierta para evitar acoplamiento con un
+   * backend específico.
    */
   details?: unknown;
 }
@@ -68,11 +68,10 @@ export const normalizeApiError = (
   }
 
   const status = context?.status;
-
   const code = getApiErrorCode(originalError, status);
 
   const message =
-    context?.message ??
+    getContextMessage(context?.message) ??
     getErrorMessage(originalError) ??
     "Ocurrió un error inesperado.";
 
@@ -81,6 +80,12 @@ export const normalizeApiError = (
     details: context?.details,
   });
 };
+
+/**
+ * ============================================================================
+ * ERROR CODE
+ * ============================================================================
+ */
 
 /**
  * Determina el código normalizado correspondiente al error.
@@ -110,17 +115,37 @@ const getApiErrorCode = (
   }
 
   /**
-   * Si no existe un estado HTTP y recibimos un Error nativo, asumimos que
-   * pertenece a una categoría de comunicación/red.
+   * Si no existe un estado HTTP y recibimos un Error nativo, asumimos
+   * que pertenece a una categoría de comunicación/red.
    *
-   * Esta decisión podrá refinarse posteriormente cuando conectemos Axios
-   * u otro transporte concreto.
+   * Esta decisión permanece deliberadamente genérica y podrá refinarse
+   * posteriormente en la capa específica del transporte si fuese necesario.
    */
   if (status === undefined && originalError instanceof Error) {
     return "NETWORK_ERROR";
   }
 
   return "UNKNOWN_ERROR";
+};
+
+/**
+ * ============================================================================
+ * MESSAGE HELPERS
+ * ============================================================================
+ */
+
+/**
+ * Obtiene un mensaje válido proporcionado explícitamente por la capa API.
+ *
+ * Los mensajes vacíos o compuestos únicamente por espacios se consideran
+ * inexistentes.
+ */
+const getContextMessage = (message: string | undefined): string | undefined => {
+  if (message?.trim()) {
+    return message;
+  }
+
+  return undefined;
 };
 
 /**

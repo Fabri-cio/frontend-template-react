@@ -2,23 +2,54 @@ import { createApiClient } from "./api-client";
 
 /**
  * ============================================================================
- * API INSTANCE
+ * PROJECT API CONFIGURATION
  * ============================================================================
  *
+ * Este archivo conecta la configuración específica del proyecto
+ * con la infraestructura HTTP genérica de `api-client.ts`.
+ *
+ * No contiene:
+ *
+ * - lógica de negocio
+ * - autenticación obligatoria
+ * - lógica de navegación
+ * - lógica de React Query
+ * - operaciones específicas de features
+ */
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const API_TIMEOUT = 10_000;
+
+/**
+ * La URL base es necesaria para la configuración estándar del template.
+ *
+ * Si una aplicación concreta no utiliza una base URL, puede crear
+ * su propia instancia de `createApiClient()` directamente.
+ */
+if (!API_BASE_URL) {
+  throw new Error("VITE_API_BASE_URL no está configurada.");
+}
+
+/**
+ * ============================================================================
+ * API INSTANCE
+ * ============================================================================
+ */
+
+/**
  * Instancia HTTP principal de la aplicación.
  *
  * La infraestructura genérica vive en `api-client.ts`.
  * Este archivo únicamente define la configuración específica
  * de este proyecto.
  */
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 export const api = createApiClient({
   /**
    * URL base del backend.
    *
    * Ejemplo:
+   *
    * VITE_API_BASE_URL=https://api.example.com
    */
   baseURL: API_BASE_URL,
@@ -26,7 +57,7 @@ export const api = createApiClient({
   /**
    * Tiempo máximo de espera por petición.
    */
-  timeout: 10_000,
+  timeout: API_TIMEOUT,
 
   /**
    * Headers globales.
@@ -38,28 +69,6 @@ export const api = createApiClient({
   headers: {
     Accept: "application/json",
   },
-
-  /**
-   * Autenticación.
-   *
-   * Por ahora no imponemos ningún sistema.
-   *
-   * Cuando el proyecto implemente autenticación, podremos
-   * configurar:
-   *
-   * - Bearer Token
-   * - JWT
-   * - API Key
-   * - Headers personalizados
-   * - Multi-tenant
-   *
-   * Ejemplo:
-   *
-   * auth: {
-   *   getToken: () => tokenStorage.getAccessToken(),
-   *   scheme: "Bearer",
-   * }
-   */
 
   /**
    * Cookies cross-origin.

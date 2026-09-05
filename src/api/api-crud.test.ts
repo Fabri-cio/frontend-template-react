@@ -305,4 +305,27 @@ describe("createCrudOperations", () => {
       expect(api.delete).toHaveBeenCalledWith("/users/1");
     });
   });
+
+  it("rechaza un recurso vacío", () => {
+    const api = createMockApi();
+
+    expect(() => {
+      createCrudOperations<User>(api, "");
+    }).toThrow("El recurso CRUD no puede estar vacío.");
+  });
+
+  it("normaliza múltiples slashes alrededor del recurso", async () => {
+    const api = createMockApi();
+
+    const crud = createCrudOperations<User>(api, "///users///");
+
+    await crud.list();
+    await crud.getOne(123);
+
+    expect(api.get).toHaveBeenNthCalledWith(1, "/users", {
+      params: undefined,
+    });
+
+    expect(api.get).toHaveBeenNthCalledWith(2, "/users/123");
+  });
 });

@@ -1,4 +1,3 @@
-// El uso de este archivo no es obligatorio, pero es recomendable
 import type {
   ApiClient,
   CrudListParams,
@@ -13,6 +12,12 @@ import type {
  * ============================================================================
  */
 
+/**
+ * Configuración opcional de las operaciones CRUD.
+ *
+ * Esta utilidad debe utilizarse únicamente cuando el recurso
+ * siga una estructura REST convencional.
+ */
 export interface CrudOptions {
   /**
    * Método HTTP utilizado para actualizar una entidad.
@@ -44,7 +49,7 @@ export interface CrudOptions {
  */
 
 /**
- * Normaliza el nombre de un recurso.
+ * Normaliza el nombre de un recurso eliminando "/" al inicio y al final.
  *
  * Ejemplos:
  *
@@ -54,25 +59,28 @@ export interface CrudOptions {
  * "/users/"  -> "users"
  */
 const normalizeResource = (resource: string): string => {
-  return resource.replace(/^\/+|\/+$/g, "");
+  const normalizedResource = resource.replace(/^\/+|\/+$/g, "");
+
+  if (!normalizedResource) {
+    throw new Error("El recurso CRUD no puede estar vacío.");
+  }
+
+  return normalizedResource;
 };
 
 /**
- * Crea una función para construir URLs del recurso.
+ * Crea una función para construir las URLs de un recurso.
  */
 const createResourceUrlBuilder = (resource: string, trailingSlash: boolean) => {
   const normalizedResource = normalizeResource(resource);
+  const suffix = trailingSlash ? "/" : "";
 
-  return (path?: string | number): string => {
-    const suffix = trailingSlash ? "/" : "";
-
-    if (path === undefined || path === null) {
+  return (id?: EntityId): string => {
+    if (id === undefined || id === null) {
       return `/${normalizedResource}${suffix}`;
     }
 
-    return `/${normalizedResource}/${encodeURIComponent(
-      String(path),
-    )}${suffix}`;
+    return `/${normalizedResource}/${encodeURIComponent(String(id))}${suffix}`;
   };
 };
 

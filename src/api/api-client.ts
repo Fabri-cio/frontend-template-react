@@ -9,6 +9,7 @@ import type {
   ApiAuthConfig,
   ApiClient,
   ApiClientOptions,
+  ApiHeaders,
   ApiRequestOptions,
   ApiResponse,
 } from "./api.types";
@@ -16,22 +17,22 @@ import type {
 import { normalizeApiError } from "./api-error";
 
 /**
- * ===========================================================================
+ * ============================================================================
  * HELPERS
- * ===========================================================================
+ * ============================================================================
  */
 
 /**
- * Normaliza los headers de Axios a un objeto simple.
+ * Normaliza los headers de Axios a nuestro contrato público simple.
  */
 const normalizeHeaders = (
   headers: AxiosResponse["headers"] | undefined,
-): Record<string, string> | undefined => {
+): ApiHeaders | undefined => {
   if (!headers) {
     return undefined;
   }
 
-  const result: Record<string, string> = {};
+  const result: ApiHeaders = {};
 
   Object.entries(headers).forEach(([key, value]) => {
     if (value === undefined || value === null) {
@@ -50,11 +51,14 @@ const normalizeHeaders = (
 };
 
 /**
- * Copia headers de cualquier configuración de Axios
- * hacia AxiosHeaders.
+ * Combina distintas representaciones de headers de Axios.
  *
- * Mantenemos esta conversión manual porque Axios permite
- * diferentes representaciones de headers.
+ * El orden de los argumentos determina la prioridad:
+ *
+ * último source = mayor prioridad.
+ *
+ * Se utiliza `Object.entries` deliberadamente para mantener compatibilidad
+ * con las diferentes representaciones de headers aceptadas por Axios.
  */
 const mergeHeaders = (
   ...sources: Array<AxiosRequestConfig["headers"] | undefined>
@@ -77,16 +81,24 @@ const mergeHeaders = (
 };
 
 /**
- * ===========================================================================
+ * ============================================================================
  * AUTHENTICATION
- * ===========================================================================
+ * ============================================================================
  */
 
 /**
  * Aplica la autenticación configurada a una petición.
  *
- * El cliente NO sabe qué sistema de autenticación
- * utiliza la aplicación.
+ * Precedencia:
+ *
+ * headers de configuración/request
+ *          ↓
+ * headers personalizados de autenticación
+ *          ↓
+ * token
+ *
+ * Si dos fuentes utilizan el mismo header, la fuente aplicada posteriormente
+ * tiene prioridad.
  */
 const applyAuthentication = (
   config: AxiosRequestConfig,
@@ -128,11 +140,19 @@ const applyAuthentication = (
 };
 
 /**
- * ===========================================================================
+ * ============================================================================
  * API CLIENT
- * ===========================================================================
+ * ============================================================================
  */
 
+/**
+ * Crea una instancia configurable del cliente HTTP.
+ *
+ * El cliente es backend-agnóstico.
+ *
+ * El transporte actual es Axios y se mantiene disponible como escape hatch
+ * para casos avanzados.
+ */
 export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
   const {
     baseURL,
@@ -151,6 +171,8 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
 
   /**
    * Instancia Axios.
+   *
+   * `axiosConfig` permite utilizar opciones avanzadas de Axios.
    */
   const instance: AxiosInstance = axios.create({
     baseURL,
@@ -169,12 +191,13 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
   instance.interceptors.request.use(
     (config) => {
       /**
-       * Aplicamos autenticación.
+       * Aplicamos autenticación después de preparar
+       * los headers de la petición.
        */
       applyAuthentication(config, auth);
 
       /**
-       * Permitimos que la aplicación modifique
+       * `onRequest` representa la última oportunidad de modificar
        * la configuración antes de enviar la petición.
        */
       const modifiedConfig = onRequest?.(config);
@@ -182,15 +205,23 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
       if (modifiedConfig) {
         Object.assign(config, modifiedConfig);
 
+        /**
+         * Si `onRequest` proporciona headers, los combinamos
+         * en lugar de reemplazar silenciosamente los existentes.
+         */
         if (modifiedConfig.headers) {
           config.headers = mergeHeaders(config.headers, modifiedConfig.headers);
         }
       }
 
       /**
-       * Logging básico únicamente en desarrollo.
+       * Logging únicamente en desarrollo.
        *
-       * No mostramos payloads.
+       * No mostramos:
+       *
+       * - payloads
+       * - headers
+       * - tokens
        */
       if (isDev) {
         console.debug(
@@ -235,7 +266,7 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
       onResponse?.(response);
 
       /**
-       * Logging básico únicamente en desarrollo.
+       * Logging únicamente en desarrollo.
        *
        * No mostramos response.data.
        */
@@ -249,9 +280,6 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
     (error: unknown) => {
       /**
        * Extraemos el status HTTP antes de normalizar el error.
-       *
-       * AppError no depende de HTTP, por lo que el status solamente
-       * se utiliza como información de entrada para la normalización.
        */
       const status = axios.isAxiosError(error)
         ? error.response?.status
@@ -269,15 +297,14 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
       }
 
       /**
-       * La aplicación decide qué hacer ante un error
-       * de autenticación.
+       * La aplicación decide qué hacer ante HTTP 401.
        */
       if (apiError.code === "UNAUTHORIZED") {
         onUnauthorized?.(apiError);
       }
 
       /**
-       * Error global.
+       * Error global normalizado.
        */
       onError?.(apiError);
 
@@ -292,8 +319,7 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
    */
 
   /**
-   * Ejecuta una petición HTTP y devuelve
-   * la respuesta completa de Axios.
+   * Ejecuta una petición HTTP y devuelve la respuesta completa de Axios.
    */
   const executeRequest = async <TResponse = unknown, TData = unknown>(
     requestOptions: ApiRequestOptions<TData>,
@@ -318,8 +344,8 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
       signal,
 
       /**
-       * Headers específicos de la petición
-       * tienen prioridad sobre los globales.
+       * Headers específicos de la petición tienen prioridad
+       * sobre los headers definidos dentro de `config`.
        */
       headers: mergeHeaders(config.headers, requestHeaders),
     };
@@ -328,8 +354,13 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
   };
 
   /**
-   * Ejecuta una petición HTTP y devuelve
-   * únicamente el payload.
+   * =========================================================================
+   * GENERIC REQUEST
+   * =========================================================================
+   */
+
+  /**
+   * Ejecuta una petición y devuelve únicamente el payload.
    */
   const request = async <TResponse = unknown, TData = unknown>(
     requestOptions: ApiRequestOptions<TData>,
@@ -340,8 +371,13 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
   };
 
   /**
-   * Ejecuta una petición HTTP y devuelve
-   * payload + metadata HTTP.
+   * =========================================================================
+   * REQUEST WITH RESPONSE METADATA
+   * =========================================================================
+   */
+
+  /**
+   * Ejecuta una petición y devuelve payload + metadata HTTP.
    */
   const requestResponse = async <TResponse = unknown, TData = unknown>(
     requestOptions: ApiRequestOptions<TData>,
@@ -362,6 +398,9 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
    * =========================================================================
    */
 
+  /**
+   * HTTP GET.
+   */
   const get = async <TResponse = unknown>(
     url: string,
     requestOptions: Omit<ApiRequestOptions, "method" | "url" | "data"> = {},
@@ -373,6 +412,9 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
     });
   };
 
+  /**
+   * HTTP POST.
+   */
   const post = async <TResponse = unknown, TData = unknown>(
     url: string,
     data?: TData,
@@ -386,6 +428,9 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
     });
   };
 
+  /**
+   * HTTP PUT.
+   */
   const put = async <TResponse = unknown, TData = unknown>(
     url: string,
     data?: TData,
@@ -399,6 +444,9 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
     });
   };
 
+  /**
+   * HTTP PATCH.
+   */
   const patch = async <TResponse = unknown, TData = unknown>(
     url: string,
     data?: TData,
@@ -412,6 +460,9 @@ export const createApiClient = (options: ApiClientOptions = {}): ApiClient => {
     });
   };
 
+  /**
+   * HTTP DELETE.
+   */
   const deleteRequest = async <TResponse = unknown>(
     url: string,
     requestOptions: Omit<ApiRequestOptions, "method" | "url" | "data"> = {},
