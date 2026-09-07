@@ -38,10 +38,10 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
   return (
     <input
       ref={ref}
+      {...props}
       type="checkbox"
       className={classes}
       aria-invalid={error || undefined}
-      {...props}
     />
   );
 });

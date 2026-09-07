@@ -1,11 +1,13 @@
-import type { HTMLAttributes } from "react";
+import { forwardRef, type HTMLAttributes } from "react";
 
 interface PageContainerProps extends HTMLAttributes<HTMLDivElement> {}
 
-function PageContainer({ className = "", ...props }: PageContainerProps) {
-  const classes = ["container", className].filter(Boolean).join(" ");
+const PageContainer = forwardRef<HTMLDivElement, PageContainerProps>(
+  function PageContainer({ className = "", ...props }, ref) {
+    const classes = ["container", className].filter(Boolean).join(" ");
 
-  return <div className={classes} {...props} />;
-}
+    return <div ref={ref} className={classes} {...props} />;
+  },
+);
 
 export default PageContainer;

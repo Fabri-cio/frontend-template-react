@@ -3,6 +3,7 @@ import {
   cloneElement,
   createContext,
   isValidElement,
+  useCallback,
   useContext,
   useEffect,
   useId,
@@ -13,6 +14,7 @@ import {
   type KeyboardEvent,
   type ReactElement,
   type ReactNode,
+  type Ref,
 } from "react";
 
 interface DropdownContextValue {
@@ -20,7 +22,7 @@ interface DropdownContextValue {
   toggle: (trigger?: HTMLElement) => void;
   close: (restoreFocus?: boolean) => void;
   setTriggerElement: (element: HTMLElement | null) => void;
-  registerItem: (element: HTMLButtonElement | null) => void;
+  registerItem: (element: HTMLButtonElement | null) => (() => void) | undefined;
   focusItem: (direction: "next" | "previous" | "first" | "last") => void;
   menuId: string;
 }
@@ -70,13 +72,13 @@ function Dropdown({ children, className = "" }: DropdownProps) {
 
   const menuId = useId();
 
-  const setTriggerElement = (element: HTMLElement | null) => {
+  const setTriggerElement = useCallback((element: HTMLElement | null) => {
     triggerElementRef.current = element;
-  };
+  }, []);
 
-  const registerItem = (element: HTMLButtonElement | null) => {
+  const registerItem = useCallback((element: HTMLButtonElement | null) => {
     if (!element) {
-      return;
+      return undefined;
     }
 
     if (!itemElementsRef.current.includes(element)) {
@@ -88,9 +90,9 @@ function Dropdown({ children, className = "" }: DropdownProps) {
         (item) => item !== element,
       );
     };
-  };
+  }, []);
 
-  const close = (restoreFocus = false) => {
+  const close = useCallback((restoreFocus = false) => {
     setOpen(false);
 
     if (restoreFocus) {
@@ -98,45 +100,51 @@ function Dropdown({ children, className = "" }: DropdownProps) {
         triggerElementRef.current?.focus();
       });
     }
-  };
+  }, []);
 
-  const toggle = (trigger?: HTMLElement) => {
-    if (trigger) {
-      setTriggerElement(trigger);
-    }
+  const toggle = useCallback(
+    (trigger?: HTMLElement) => {
+      if (trigger) {
+        setTriggerElement(trigger);
+      }
 
-    setOpen((current) => !current);
-  };
+      setOpen((current) => !current);
+    },
+    [setTriggerElement],
+  );
 
-  const focusItem = (direction: "next" | "previous" | "first" | "last") => {
-    const items = itemElementsRef.current.filter(
-      (item) => !item.disabled && item.offsetParent !== null,
-    );
+  const focusItem = useCallback(
+    (direction: "next" | "previous" | "first" | "last") => {
+      const items = itemElementsRef.current.filter(
+        (item) => !item.disabled && item.isConnected,
+      );
 
-    if (items.length === 0) {
-      return;
-    }
+      if (items.length === 0) {
+        return;
+      }
 
-    const activeElement = document.activeElement;
-    const currentIndex = items.findIndex((item) => item === activeElement);
+      const activeElement = document.activeElement;
+      const currentIndex = items.findIndex((item) => item === activeElement);
 
-    let nextIndex = 0;
+      let nextIndex = 0;
 
-    if (direction === "first") {
-      nextIndex = 0;
-    } else if (direction === "last") {
-      nextIndex = items.length - 1;
-    } else if (direction === "next") {
-      nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % items.length;
-    } else {
-      nextIndex =
-        currentIndex === -1
-          ? items.length - 1
-          : (currentIndex - 1 + items.length) % items.length;
-    }
+      if (direction === "first") {
+        nextIndex = 0;
+      } else if (direction === "last") {
+        nextIndex = items.length - 1;
+      } else if (direction === "next") {
+        nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % items.length;
+      } else {
+        nextIndex =
+          currentIndex === -1
+            ? items.length - 1
+            : (currentIndex - 1 + items.length) % items.length;
+      }
 
-    items[nextIndex]?.focus();
-  };
+      items[nextIndex]?.focus();
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!open) {
@@ -166,7 +174,7 @@ function Dropdown({ children, className = "" }: DropdownProps) {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [open, close]);
 
   const classes = ["relative inline-block", className]
     .filter(Boolean)
@@ -211,6 +219,7 @@ function DropdownTrigger({ children, asChild = false }: DropdownTriggerProps) {
 
       if (!open) {
         toggle(event.currentTarget);
+
         requestAnimationFrame(() => {
           focusItem("first");
         });
@@ -224,6 +233,7 @@ function DropdownTrigger({ children, asChild = false }: DropdownTriggerProps) {
 
       if (!open) {
         toggle(event.currentTarget);
+
         requestAnimationFrame(() => {
           focusItem("last");
         });
@@ -357,27 +367,20 @@ function DropdownContent({
 function DropdownItem({
   children,
   onClick,
-  onKeyDown,
   destructive = false,
   disabled = false,
   className = "",
   ref,
   ...props
 }: DropdownItemProps & {
-  ref?: React.Ref<HTMLButtonElement>;
+  ref?: Ref<HTMLButtonElement>;
 }) {
   const { close, registerItem } = useDropdownContext();
 
   const internalRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
-    const element = internalRef.current;
-
-    if (!element) {
-      return;
-    }
-
-    return registerItem(element);
+    return registerItem(internalRef.current);
   }, [registerItem]);
 
   const classes = [
@@ -403,10 +406,6 @@ function DropdownItem({
     }
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    onKeyDown?.(event);
-  };
-
   return (
     <button
       ref={(element) => {
@@ -422,7 +421,6 @@ function DropdownItem({
       role="menuitem"
       disabled={disabled}
       onClick={handleClick}
-      onKeyDown={handleKeyDown}
       className={classes}
       {...props}
     >
