@@ -215,6 +215,76 @@
 }
 
 /**
+ * ============================================================================
+ * COLOR SCHEMES
+ * ============================================================================
+ *
+ * El modo claro/oscuro y el color de identidad son independientes.
+ *
+ * Ejemplo:
+ *
+ * <html class="dark" data-color="blue">
+ *
+ * .dark controla la apariencia general.
+ * data-color controla el color principal.
+ */
+
+/**
+ * ----------------------------------------------------------------------------
+ * Blue
+ * ----------------------------------------------------------------------------
+ */
+
+[data-color="blue"] {
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+}
+
+/**
+ * ----------------------------------------------------------------------------
+ * Violet
+ * ----------------------------------------------------------------------------
+ */
+
+[data-color="violet"] {
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+}
+
+/**
+ * ----------------------------------------------------------------------------
+ * Green
+ * ----------------------------------------------------------------------------
+ */
+
+[data-color="green"] {
+  --primary: #16a34a;
+  --primary-foreground: #ffffff;
+}
+
+/**
+ * ----------------------------------------------------------------------------
+ * Orange
+ * ----------------------------------------------------------------------------
+ */
+
+[data-color="orange"] {
+  --primary: #ea580c;
+  --primary-foreground: #ffffff;
+}
+
+/**
+ * ----------------------------------------------------------------------------
+ * Rose
+ * ----------------------------------------------------------------------------
+ */
+
+[data-color="rose"] {
+  --primary: #e11d48;
+  --primary-foreground: #ffffff;
+}
+
+/**
  * ----------------------------------------------------------------------------
  * Dark theme
  * ----------------------------------------------------------------------------
@@ -288,6 +358,40 @@
 
   --info: #38bdf8;
   --info-foreground: #18181b;
+}
+
+/**
+ * ============================================================================
+ * DARK COLOR SCHEMES
+ * ============================================================================
+ *
+ * Estas variantes sobrescriben únicamente el color de identidad
+ * después de aplicar los tokens del tema oscuro.
+ */
+
+.dark[data-color="blue"] {
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+}
+
+.dark[data-color="violet"] {
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+}
+
+.dark[data-color="green"] {
+  --primary: #22c55e;
+  --primary-foreground: #18181b;
+}
+
+.dark[data-color="orange"] {
+  --primary: #f97316;
+  --primary-foreground: #18181b;
+}
+
+.dark[data-color="rose"] {
+  --primary: #f43f5e;
+  --primary-foreground: #ffffff;
 }
 
 /**

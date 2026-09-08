@@ -25,34 +25,33 @@ const DashboardPage = lazy(
  * Configuración de rutas específica de la aplicación.
  *
  * El router genérico únicamente interpreta esta estructura.
- *
- * Este archivo puede comenzar siendo pequeño y crecer mediante composición
- * de grupos de rutas cuando la aplicación aumente de tamaño.
  */
 export const appRoutes: AppRoute[] = [
-  /**
-   * --------------------------------------------------------------------------
-   * PUBLIC ROUTES
-   * --------------------------------------------------------------------------
-   */
-  {
-    path: "/",
-    element: <HomePage />,
-  },
-
   /**
    * --------------------------------------------------------------------------
    * APPLICATION LAYOUT
    * --------------------------------------------------------------------------
    *
-   * Las rutas hijas comparten el mismo layout.
+   * Las rutas principales de la aplicación comparten:
+   *
+   * - Sidebar
+   * - Header
+   * - Área de contenido
    */
   {
     element: <AppLayout />,
     children: [
       {
+        path: "/",
+        element: <HomePage />,
+      },
+      {
         path: "/dashboard",
         element: <DashboardPage />,
+      },
+      {
+        path: "/ui-playground",
+        element: <UiPlaygroundPage />,
       },
     ],
   },
@@ -61,11 +60,6 @@ export const appRoutes: AppRoute[] = [
    * --------------------------------------------------------------------------
    * REDIRECT
    * --------------------------------------------------------------------------
-   *
-   * Los redirects forman parte de la configuración de la aplicación.
-   *
-   * El router genérico no necesita conocer ninguna lógica específica
-   * de redirects.
    */
   {
     path: "/old-dashboard",
@@ -80,15 +74,5 @@ export const appRoutes: AppRoute[] = [
   {
     path: "*",
     element: <NotFoundPage />,
-  },
-
-  /**
-   * --------------------------------------------------------------------------
-   * UI PLAYGROUND
-   * --------------------------------------------------------------------------
-   */
-  {
-    path: "/ui-playground",
-    element: <UiPlaygroundPage />,
   },
 ];
