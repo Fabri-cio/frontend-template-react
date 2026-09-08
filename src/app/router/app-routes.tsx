@@ -17,6 +17,8 @@ const DashboardPage = lazy(
   () => import("../../pages/dashboard/dashboard-page"),
 );
 
+const UsersPage = lazy(() => import("../../features/usuarios/UsersPage"));
+
 /**
  * ============================================================================
  * APPLICATION ROUTES
@@ -52,6 +54,10 @@ export const appRoutes: AppRoute[] = [
       {
         path: "/ui-playground",
         element: <UiPlaygroundPage />,
+      },
+      {
+        path: "/users",
+        element: <UsersPage />,
       },
     ],
   },

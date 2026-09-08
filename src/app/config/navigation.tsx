@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, PanelsTopLeft } from "lucide-react";
+import { Home, LayoutDashboard, PanelsTopLeft, User } from "lucide-react";
 
 import type { SidebarItem } from "../../components/navigation";
 
@@ -51,5 +51,11 @@ export const navigationItems: NavigationItem[] = [
     label: "UI Playground",
     href: "/ui-playground",
     icon: <PanelsTopLeft className="size-5" />,
+  },
+  {
+    id: "users",
+    label: "Usuarios",
+    href: "/users",
+    icon: <User className="size-5" />,
   },
 ];
