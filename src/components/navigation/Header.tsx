@@ -83,14 +83,12 @@ export function Header({
 
   showThemeToggle = true,
 }: HeaderProps) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
 
   const [searchOpen, setSearchOpen] = useState(false);
-
   const [searchValue, setSearchValue] = useState("");
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-
   const [userOpen, setUserOpen] = useState(false);
 
   const searchRef = useRef<HTMLInputElement>(null);
@@ -98,6 +96,12 @@ export function Header({
   const unreadCount = notifications.filter(
     (notification) => !notification.read,
   ).length;
+
+  /**
+   * --------------------------------------------------------------------------
+   * Atajos de teclado
+   * --------------------------------------------------------------------------
+   */
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -129,6 +133,12 @@ export function Header({
     };
   }, [search]);
 
+  /**
+   * --------------------------------------------------------------------------
+   * Usuario
+   * --------------------------------------------------------------------------
+   */
+
   const initials =
     user?.initials ||
     user?.name
@@ -139,19 +149,46 @@ export function Header({
       .toUpperCase() ||
     "?";
 
+  /**
+   * --------------------------------------------------------------------------
+   * Búsqueda
+   * --------------------------------------------------------------------------
+   */
+
   const handleSearchSubmit = () => {
     onSearch?.(searchValue);
   };
 
+  /**
+   * --------------------------------------------------------------------------
+   * Tema
+   * --------------------------------------------------------------------------
+   *
+   * La UI debe utilizar resolvedTheme porque theme también puede ser
+   * "system". resolvedTheme siempre representa el tema visual efectivo.
+   */
+
   const handleThemeToggle = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
+
+  /**
+   * --------------------------------------------------------------------------
+   * Notificaciones
+   * --------------------------------------------------------------------------
+   */
 
   const handleNotificationClick = (notification: HeaderNotification) => {
     onNotificationClick?.(notification);
 
     setNotificationsOpen(false);
   };
+
+  /**
+   * --------------------------------------------------------------------------
+   * Menús
+   * --------------------------------------------------------------------------
+   */
 
   const closeMenus = () => {
     setNotificationsOpen(false);
@@ -236,14 +273,14 @@ export function Header({
             <button
               type="button"
               aria-label={
-                theme === "dark"
+                resolvedTheme === "dark"
                   ? "Cambiar a modo claro"
                   : "Cambiar a modo oscuro"
               }
               onClick={handleThemeToggle}
               className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
-              {theme === "dark" ? (
+              {resolvedTheme === "dark" ? (
                 <Sun className="h-5 w-5" />
               ) : (
                 <Moon className="h-5 w-5" />
@@ -259,7 +296,6 @@ export function Header({
                 aria-expanded={notificationsOpen}
                 onClick={() => {
                   setNotificationsOpen((current) => !current);
-
                   setUserOpen(false);
                 }}
                 className="relative flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -351,7 +387,6 @@ export function Header({
                 aria-expanded={userOpen}
                 onClick={() => {
                   setUserOpen((current) => !current);
-
                   setNotificationsOpen(false);
                 }}
                 className="flex h-9 items-center gap-2 rounded-md px-1.5 pr-2 transition-colors hover:bg-secondary"
@@ -450,7 +485,6 @@ export function Header({
                 value={searchValue}
                 onChange={(event) => {
                   setSearchValue(event.target.value);
-
                   onSearch?.(event.target.value);
                 }}
                 onKeyDown={(event) => {
@@ -496,7 +530,6 @@ function formatTimeAgo(dateString: string): string {
   }
 
   const diff = Date.now() - date.getTime();
-
   const minutes = Math.floor(diff / 60000);
 
   if (minutes < 1) {
