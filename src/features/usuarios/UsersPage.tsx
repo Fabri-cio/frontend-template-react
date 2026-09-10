@@ -1,174 +1,199 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useCreateUser } from "./users.hooks";
+import {
+  Badge,
+  Button,
+  DataTable,
+  DataTablePagination,
+  DataTableToolbar,
+  DataTableToolbarFilter,
+  type DataTableColumn,
+  type DataTableSort,
+} from "../../components/ui";
 
-export default function UserCreatePage() {
+import { useUsers } from "./users.hooks";
+import type { User, UserListParams } from "./users.types";
+
+/**
+ * Página genérica de gestión de usuarios.
+ *
+ * Consume los componentes reutilizables de DataTable
+ * y conecta la tabla con los hooks específicos de la feature.
+ */
+export default function UsersPage() {
   const navigate = useNavigate();
-  const createUser = useCreateUser();
 
-  const [form, setForm] = useState({
-    username: "",
-    email: "",
-    password: "",
-    first_name: "",
-    last_name: "",
-    is_active: true,
-  });
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sort, setSort] = useState<DataTableSort | null>(null);
+  const [selectedRows, setSelectedRows] = useState<Array<string | number>>([]);
 
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value, type, checked } = event.target;
+  const params = useMemo<UserListParams>(() => {
+    const nextParams: UserListParams = {
+      page,
+      page_size: pageSize,
+    };
 
-    setForm((current) => ({
-      ...current,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    if (search.trim()) {
+      nextParams.search = search.trim();
+    }
+
+    if (status === "active") {
+      nextParams.is_active = true;
+    }
+
+    if (status === "inactive") {
+      nextParams.is_active = false;
+    }
+
+    if (sort) {
+      nextParams.ordering = sort.direction === "desc" ? `-${sort.id}` : sort.id;
+    }
+
+    return nextParams;
+  }, [page, pageSize, search, status, sort]);
+
+  const { data, isLoading, isError, error } = useUsers(params);
+
+  const users = data?.results ?? [];
+  const totalItems = data?.count ?? 0;
+
+  const columns = useMemo<DataTableColumn<User>[]>(
+    () => [
+      {
+        id: "username",
+        header: "Usuario",
+        accessor: "username",
+        sortable: true,
+      },
+      {
+        id: "email",
+        header: "Correo",
+        accessor: "email",
+        sortable: true,
+      },
+      {
+        id: "first_name",
+        header: "Nombre",
+        cell: (user) => `${user.first_name} ${user.last_name}`.trim() || "—",
+        sortable: true,
+      },
+      {
+        id: "is_active", // id unico de la columna
+        header: "Estado", // nombre de la columna
+        cell: (user) => // retorna un badge dependiendo si el usuario esta activo o inactivo
+          user.is_active ? (
+            <Badge variant="success">Activo</Badge>
+          ) : (
+            <Badge variant="secondary">Inactivo</Badge>
+          ),
+        sortable: true, // significa que se puede ordenar por este campo
+        align: "center", // significa que se alinea al centro
+      },
+      {
+        id: "date_joined",
+        header: "Fecha de registro",
+        cell: (user) => new Date(user.date_joined).toLocaleDateString(),
+        sortable: true,
+      },
+    ],
+    [],
+  );
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPage(1);
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function handleStatusChange(value: string) {
+    setStatus(value);
+    setPage(1);
+  }
 
-    await createUser.mutateAsync(form);
+  function handlePageSizeChange(value: number) {
+    setPageSize(value);
+    setPage(1);
+  }
 
-    navigate("/users");
+  function handleSortChange(value: DataTableSort | null) {
+    setSort(value);
+    setPage(1);
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Crear usuario</h1>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Usuarios</h1>
 
-        <p className="mt-1 text-sm text-gray-500">
-          Registra un nuevo usuario en el sistema.
-        </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Gestiona los usuarios del sistema.
+          </p>
+        </div>
+
+        <Button onClick={() => navigate("/users/new")}>Nuevo usuario</Button>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-2xl space-y-5 rounded-lg border p-6"
+      <DataTableToolbar
+        search={search}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Buscar usuarios..."
       >
-        <div>
-          <label htmlFor="username" className="mb-1 block text-sm font-medium">
-            Usuario
-          </label>
+        <DataTableToolbarFilter
+          value={status}
+          onChange={handleStatusChange}
+          options={[
+            {
+              value: "active",
+              label: "Activos",
+            },
+            {
+              value: "inactive",
+              label: "Inactivos",
+            },
+          ]}
+          label="Estado"
+          placeholder="Todos"
+        />
+      </DataTableToolbar>
 
-          <input
-            id="username"
-            name="username"
-            type="text"
-            value={form.username}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border px-3 py-2"
-          />
+      {isError ? (
+        <div
+          role="alert"
+          className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+        >
+          {error instanceof Error
+            ? error.message
+            : "No se pudieron cargar los usuarios."}
         </div>
+      ) : null}
 
-        <div>
-          <label htmlFor="email" className="mb-1 block text-sm font-medium">
-            Email
-          </label>
+      <DataTable
+        data={users}
+        columns={columns}
+        getRowId={(user) => user.id}
+        loading={isLoading}
+        emptyMessage="No hay usuarios para mostrar."
+        selectable
+        selectedRows={selectedRows}
+        onSelectedRowsChange={setSelectedRows}
+        sort={sort}
+        onSortChange={handleSortChange}
+        striped
+        hoverable
+        stickyHeader
+      />
 
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium">
-            Contraseña
-          </label>
-
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border px-3 py-2"
-          />
-        </div>
-
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label
-              htmlFor="first_name"
-              className="mb-1 block text-sm font-medium"
-            >
-              Nombre
-            </label>
-
-            <input
-              id="first_name"
-              name="first_name"
-              type="text"
-              value={form.first_name}
-              onChange={handleChange}
-              className="w-full rounded-md border px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="last_name"
-              className="mb-1 block text-sm font-medium"
-            >
-              Apellido
-            </label>
-
-            <input
-              id="last_name"
-              name="last_name"
-              type="text"
-              value={form.last_name}
-              onChange={handleChange}
-              className="w-full rounded-md border px-3 py-2"
-            />
-          </div>
-        </div>
-
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            name="is_active"
-            type="checkbox"
-            checked={form.is_active}
-            onChange={handleChange}
-          />
-          Usuario activo
-        </label>
-
-        {createUser.isError && (
-          <p className="text-sm text-red-600">
-            {createUser.error instanceof Error
-              ? createUser.error.message
-              : "No se pudo crear el usuario."}
-          </p>
-        )}
-
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => navigate("/users")}
-            className="rounded-md border px-4 py-2 text-sm"
-          >
-            Cancelar
-          </button>
-
-          <button
-            type="submit"
-            disabled={createUser.isPending}
-            className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50"
-          >
-            {createUser.isPending ? "Creando..." : "Crear usuario"}
-          </button>
-        </div>
-      </form>
+      <DataTablePagination
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setPage}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </div>
   );
 }

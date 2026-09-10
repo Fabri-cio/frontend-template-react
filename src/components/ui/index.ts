@@ -32,3 +32,41 @@ export { default as Pagination } from "./Pagination";
 export { default as Select } from "./Select";
 export { default as Spinner } from "./Spinner";
 export { default as Textarea } from "./Textarea";
+
+
+// Componentes genéricos de tablas.
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableCaption,
+  DataTable,
+  DataTablePagination,
+  DataTableToolbar,
+  DataTableToolbarFilter,
+} from "./table";
+
+export type {
+  TableProps,
+  TableSize,
+  TableAlign,
+  TableHeaderProps,
+  TableBodyProps,
+  TableFooterProps,
+  TableRowProps,
+  TableHeadProps,
+  TableCellProps,
+  TableCaptionProps,
+  DataTableProps,
+  DataTableColumn,
+  DataTableSort,
+  SortDirection,
+  DataTablePaginationProps,
+  DataTableToolbarProps,
+  DataTableToolbarFilterProps,
+  DataTableToolbarFilterOption,
+} from "./table";
