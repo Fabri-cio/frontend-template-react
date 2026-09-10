@@ -19,6 +19,8 @@ const DashboardPage = lazy(
 
 const UsersPage = lazy(() => import("../../features/usuarios/UsersPage"));
 
+const UserCreatePage = lazy(() => import("../../features/usuarios/UserCreatePage"));
+
 /**
  * ============================================================================
  * APPLICATION ROUTES
@@ -58,6 +60,10 @@ export const appRoutes: AppRoute[] = [
       {
         path: "/users",
         element: <UsersPage />,
+      },
+      {
+        path: "/users/new",
+        element: <UserCreatePage />,
       },
     ],
   },
