@@ -5,9 +5,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import UserCreatePage from "./UserCreatePage";
 
 import { AppError } from "../../app/errors/app-error";
+import { ToastProvider } from "../../components/ui";
 
 const mockNavigate = vi.fn();
 const mockMutateAsync = vi.fn();
+
+function renderUserCreatePage() {
+  return render(
+    <ToastProvider>
+      <UserCreatePage />
+    </ToastProvider>,
+  );
+}
 
 vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
@@ -23,10 +32,12 @@ vi.mock("./users.hooks", () => ({
 describe("UserCreatePage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockMutateAsync.mockReset();
+    mockNavigate.mockReset();
   });
 
   it("renderiza el título y el formulario de creación", () => {
-    render(<UserCreatePage />);
+    renderUserCreatePage();
 
     expect(
       screen.getByRole("heading", { name: "Crear usuario" }),
@@ -50,7 +61,7 @@ describe("UserCreatePage", () => {
   it("muestra el modal de confirmación con los datos del usuario", async () => {
     const user = userEvent.setup();
 
-    render(<UserCreatePage />);
+    renderUserCreatePage();
 
     await user.type(screen.getByLabelText(/^Usuario/), "juan");
 
@@ -86,7 +97,7 @@ describe("UserCreatePage", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("crea el usuario al confirmar y navega a la lista", async () => {
+  it("crea el usuario, muestra Toast de éxito y navega a la lista", async () => {
     const user = userEvent.setup();
 
     mockMutateAsync.mockResolvedValue({
@@ -95,7 +106,7 @@ describe("UserCreatePage", () => {
       email: "juan@example.com",
     });
 
-    render(<UserCreatePage />);
+    renderUserCreatePage();
 
     await user.type(screen.getByLabelText(/^Usuario/), "juan");
 
@@ -129,6 +140,13 @@ describe("UserCreatePage", () => {
       });
     });
 
+    await waitFor(() => {
+      const toast = screen.getByRole("status");
+
+      expect(toast).toHaveTextContent("Usuario creado");
+      expect(toast).toHaveTextContent("El usuario se creó correctamente.");
+    });
+
     expect(mockNavigate).toHaveBeenCalledWith("/users");
 
     expect(
@@ -145,7 +163,7 @@ describe("UserCreatePage", () => {
       email: "juan@example.com",
     });
 
-    render(<UserCreatePage />);
+    renderUserCreatePage();
 
     await user.type(screen.getByLabelText(/^Usuario/), "juan");
 
@@ -179,7 +197,7 @@ describe("UserCreatePage", () => {
   it("cierra el modal al cancelar la confirmación", async () => {
     const user = userEvent.setup();
 
-    render(<UserCreatePage />);
+    renderUserCreatePage();
 
     await user.type(screen.getByLabelText(/^Usuario/), "juan");
 
@@ -211,7 +229,7 @@ describe("UserCreatePage", () => {
   it("navega a la lista al cancelar el formulario", async () => {
     const user = userEvent.setup();
 
-    render(<UserCreatePage />);
+    renderUserCreatePage();
 
     await user.click(screen.getByRole("button", { name: "Cancelar" }));
 
@@ -230,7 +248,7 @@ describe("UserCreatePage", () => {
       }),
     );
 
-    render(<UserCreatePage />);
+    renderUserCreatePage();
 
     await user.type(screen.getByLabelText(/^Usuario/), "juan");
 
@@ -262,5 +280,47 @@ describe("UserCreatePage", () => {
     ).not.toBeInTheDocument();
 
     expect(mockNavigate).not.toHaveBeenCalled();
+
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("muestra Toast cuando ocurre un error general", async () => {
+    const user = userEvent.setup();
+
+    mockMutateAsync.mockRejectedValue(
+      new AppError("SERVER_ERROR", "Error interno del servidor"),
+    );
+
+    renderUserCreatePage();
+
+    await user.type(screen.getByLabelText(/^Usuario/), "juan");
+
+    await user.type(
+      screen.getByLabelText(/^Correo electrónico/),
+      "juan@example.com",
+    );
+
+    await user.type(screen.getByLabelText(/^Contraseña/), "secret123");
+
+    await user.click(screen.getByRole("button", { name: "Crear usuario" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Confirmar creación" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Sí, crear" }));
+
+    await waitFor(() => {
+      const toast = screen.getByRole("status");
+
+      expect(toast).toHaveTextContent("Error del servidor");
+      expect(toast).toHaveTextContent("Ocurrió un error en el servidor.");
+    });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    expect(
+      screen.queryByRole("heading", { name: "Confirmar creación" }),
+    ).not.toBeInTheDocument();
   });
 });

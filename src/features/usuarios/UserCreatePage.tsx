@@ -19,6 +19,9 @@ import { useCreateUser } from "./users.hooks";
 import type { UserFormValues } from "./UserForm";
 import type { CreateUserInput } from "./users.types";
 
+import { AppError } from "../../app/errors/app-error";
+import { showAppErrorToast, useToast } from "../../components/ui";
+
 /**
  * Página para crear un nuevo usuario.
  *
@@ -34,6 +37,7 @@ import type { CreateUserInput } from "./users.types";
 export default function UserCreatePage() {
   const navigate = useNavigate();
   const createUser = useCreateUser();
+  const toast = useToast();
 
   const [pendingValues, setPendingValues] = useState<UserFormValues | null>(
     null,
@@ -76,12 +80,24 @@ export default function UserCreatePage() {
     try {
       await createUser.mutateAsync(data);
 
+      // toast
+      toast.showToast({
+        variant: "success",
+        title: "Usuario creado",
+        children: "El usuario se creó correctamente.",
+      });
+
       setPendingValues(null);
       navigate("/users");
     } catch (error) {
       const errors = getValidationFieldErrors(error);
 
-      setFieldErrors(errors);
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+      } else if (error instanceof AppError) {
+        showAppErrorToast(toast, error);
+      }
+
       setPendingValues(null);
     }
   }

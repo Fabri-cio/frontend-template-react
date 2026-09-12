@@ -72,3 +72,4 @@ export type {
 
 export { ToastProvider, useToast } from "./toast";
 export type { ToastOptions } from "./toast";
+export { showAppErrorToast } from "./toast/showAppErrorToast";
