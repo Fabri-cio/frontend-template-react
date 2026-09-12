@@ -1,5 +1,4 @@
-import type { FormEvent } from "react";
-
+import type { SubmitEvent } from "react";
 import { Button, Input, Select } from "../../components/ui";
 
 import { Form, FormActions, FormField } from "../../components/ui/form";
@@ -40,7 +39,7 @@ export function UserForm({
   submitLabel = "Guardar",
   fieldErrors,
 }: UserFormProps) {
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);

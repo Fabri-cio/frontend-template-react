@@ -33,7 +33,6 @@ export { default as Select } from "./Select";
 export { default as Spinner } from "./Spinner";
 export { default as Textarea } from "./Textarea";
 
-
 // Componentes genéricos de tablas.
 export {
   Table,
@@ -70,3 +69,6 @@ export type {
   DataTableToolbarFilterProps,
   DataTableToolbarFilterOption,
 } from "./table";
+
+export { ToastProvider, useToast } from "./toast";
+export type { ToastOptions } from "./toast";
