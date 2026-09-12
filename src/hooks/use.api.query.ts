@@ -6,9 +6,11 @@ import {
   type UseQueryResult,
 } from "@tanstack/react-query";
 
+import { AppError } from "../app/errors/app-error";
+
 export type UseApiQueryOptions<
   TQueryFnData,
-  TError = Error,
+  TError = AppError,
   TData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey,
 > = Omit<
@@ -27,7 +29,7 @@ export type UseApiQueryOptions<
  */
 export function useApiQuery<
   TQueryFnData,
-  TError = Error,
+  TError = AppError,
   TData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey,
 >(

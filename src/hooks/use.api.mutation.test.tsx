@@ -3,6 +3,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 
+import { AppError } from "../app/errors/app-error";
 import { useApiMutation } from "./use.api.mutation";
 
 function createTestQueryClient() {
@@ -56,8 +57,12 @@ describe("useApiMutation", () => {
     });
   });
 
-  it("expone el estado de error", async () => {
-    const error = new Error("Error de prueba");
+  it("expone el estado de error como AppError", async () => {
+    const error = new AppError("VALIDATION_ERROR", "Error de validación", {
+      details: {
+        username: ["El usuario ya existe."],
+      },
+    });
 
     const mutationFn = async () => {
       throw error;
@@ -80,6 +85,10 @@ describe("useApiMutation", () => {
     });
 
     expect(result.current.error).toBe(error);
+    expect(result.current.error?.code).toBe("VALIDATION_ERROR");
+    expect(result.current.error?.details).toEqual({
+      username: ["El usuario ya existe."],
+    });
   });
 
   it("permite ejecutar la mutación con variables", async () => {

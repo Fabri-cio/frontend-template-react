@@ -11,6 +11,7 @@ import {
   useUser,
   useUsers,
 } from "./users.hooks";
+import { AppError } from "../../app/errors/app-error";
 
 const mockUser = {
   id: 1,
@@ -156,5 +157,37 @@ describe("users hooks", () => {
     await result.current.mutateAsync(1);
 
     expect(usersApi.delete).toHaveBeenCalledWith(1);
+  });
+
+  it("expone un AppError al fallar la creación", async () => {
+    const error = new AppError("VALIDATION_ERROR", "Error de validación", {
+      details: {
+        username: ["El usuario ya existe."],
+      },
+    });
+
+    vi.spyOn(usersApi, "create").mockRejectedValue(error);
+
+    const { result } = renderHook(() => useCreateUser(), {
+      wrapper: createWrapper(),
+    });
+
+    await expect(
+      result.current.mutateAsync({
+        username: "juan",
+        email: "juan@example.com",
+        password: "Password123!",
+      }),
+    ).rejects.toBe(error);
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(result.current.error).toBe(error);
+    expect(result.current.error?.code).toBe("VALIDATION_ERROR");
+    expect(result.current.error?.details).toEqual({
+      username: ["El usuario ya existe."],
+    });
   });
 });

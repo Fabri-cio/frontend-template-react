@@ -6,9 +6,11 @@ import {
   type UseMutationResult,
 } from "@tanstack/react-query";
 
+import { AppError } from "../app/errors/app-error";
+
 export type UseApiMutationOptions<
   TData = unknown,
-  TError = Error,
+  TError = AppError,
   TVariables = void,
   TContext = unknown,
 > = Omit<
@@ -28,7 +30,7 @@ export type UseApiMutationOptions<
  */
 export function useApiMutation<
   TData = unknown,
-  TError = Error,
+  TError = AppError,
   TVariables = void,
   TContext = unknown,
 >(

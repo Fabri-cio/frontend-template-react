@@ -1,7 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 
+import { AppError } from "../app/errors/app-error";
 import { useApiQuery } from "./use.api.query";
 
 function createTestQueryClient() {
@@ -17,11 +19,9 @@ function createTestQueryClient() {
 function createWrapper() {
   const queryClient = createTestQueryClient();
 
-  return function Wrapper({ children }: { children: React.ReactNode }) {
+  return function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
   };
 }
@@ -76,8 +76,11 @@ describe("useApiQuery", () => {
     expect(result.current.isPending).toBe(true);
   });
 
-  it("expone los errores de la consulta", async () => {
-    const error = new Error("Error de prueba");
+  it("expone los errores de la consulta como AppError", async () => {
+    const error = new AppError(
+      "NETWORK_ERROR",
+      "No se pudo conectar con el servidor",
+    );
 
     const queryFn = async () => {
       throw error;
@@ -99,6 +102,7 @@ describe("useApiQuery", () => {
     });
 
     expect(result.current.error).toBe(error);
+    expect(result.current.error?.code).toBe("NETWORK_ERROR");
   });
 
   it("respeta enabled cuando la consulta está deshabilitada", () => {

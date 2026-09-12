@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Button, Input, Select } from "../../components/ui";
 
 import { Form, FormActions, FormField } from "../../components/ui/form";
+import type { FormFieldErrors } from "../../components/ui/form/form.types";
 
 export interface UserFormValues {
   username: string;
@@ -20,6 +21,7 @@ export interface UserFormProps {
   isSubmitting?: boolean;
   passwordRequired?: boolean;
   submitLabel?: string;
+  fieldErrors?: FormFieldErrors;
 }
 
 /**
@@ -36,6 +38,7 @@ export function UserForm({
   isSubmitting = false,
   passwordRequired = true,
   submitLabel = "Guardar",
+  fieldErrors,
 }: UserFormProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,7 +60,12 @@ export function UserForm({
   return (
     <Form onSubmit={handleSubmit}>
       <div className="grid gap-6 md:grid-cols-2">
-        <FormField label="Usuario" htmlFor="username" required>
+        <FormField
+          label="Usuario"
+          htmlFor="username"
+          required
+          error={fieldErrors?.username}
+        >
           <Input
             id="username"
             name="username"
@@ -69,7 +77,12 @@ export function UserForm({
           />
         </FormField>
 
-        <FormField label="Correo electrónico" htmlFor="email" required>
+        <FormField
+          label="Correo electrónico"
+          htmlFor="email"
+          required
+          error={fieldErrors?.email}
+        >
           <Input
             id="email"
             name="email"
@@ -81,7 +94,11 @@ export function UserForm({
           />
         </FormField>
 
-        <FormField label="Nombre" htmlFor="first_name">
+        <FormField
+          label="Nombre"
+          htmlFor="first_name"
+          error={fieldErrors?.first_name}
+        >
           <Input
             id="first_name"
             name="first_name"
@@ -92,7 +109,11 @@ export function UserForm({
           />
         </FormField>
 
-        <FormField label="Apellido" htmlFor="last_name">
+        <FormField
+          label="Apellido"
+          htmlFor="last_name"
+          error={fieldErrors?.last_name}
+        >
           <Input
             id="last_name"
             name="last_name"
@@ -112,6 +133,7 @@ export function UserForm({
               ? "La contraseña es obligatoria."
               : "Deja este campo vacío si no deseas cambiar la contraseña."
           }
+          error={fieldErrors?.password}
         >
           <Input
             id="password"
@@ -124,7 +146,12 @@ export function UserForm({
           />
         </FormField>
 
-        <FormField label="Estado" htmlFor="is_active" required>
+        <FormField
+          label="Estado"
+          htmlFor="is_active"
+          required
+          error={fieldErrors?.is_active}
+        >
           <Select
             id="is_active"
             name="is_active"

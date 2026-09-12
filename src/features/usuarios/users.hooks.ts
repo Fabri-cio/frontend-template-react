@@ -9,6 +9,7 @@ import type {
   UserListResponse,
 } from "./users.types";
 import { usersApi } from "./users.api";
+import type { AppError } from "../../app/errors/app-error";
 
 /**
  * Obtiene la lista paginada de usuarios.
@@ -35,7 +36,7 @@ export function useUser(id: number) {
  * Crea un usuario.
  */
 export function useCreateUser() {
-  return useApiMutation<User, Error, CreateUserInput>({
+  return useApiMutation<User, AppError, CreateUserInput>({
     mutationFn: (data) => usersApi.create(data),
   });
 }
@@ -46,7 +47,7 @@ export function useCreateUser() {
 export function useUpdateUser() {
   return useApiMutation<
     User,
-    Error,
+    AppError,
     { id: number; data: UpdateUserInput }
   >({
     mutationFn: ({ id, data }) => usersApi.update(id, data),
@@ -57,7 +58,7 @@ export function useUpdateUser() {
  * Elimina un usuario.
  */
 export function useDeleteUser() {
-  return useApiMutation<unknown, Error, number>({
+  return useApiMutation<unknown, AppError, number>({
     mutationFn: (id) => usersApi.delete(id),
   });
 }

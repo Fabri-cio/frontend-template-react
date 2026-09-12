@@ -50,6 +50,7 @@ export interface ApiErrorContext {
  * - 403 → FORBIDDEN
  * - 404 → NOT_FOUND
  * - 422 → VALIDATION_ERROR
+ * - 400 con errores estructurados por campo → VALIDATION_ERROR
  * - 5xx → SERVER_ERROR
  * - sin estado HTTP → NETWORK_ERROR cuando el error es una instancia de Error
  * - cualquier otro caso → UNKNOWN_ERROR
@@ -68,7 +69,8 @@ export const normalizeApiError = (
   }
 
   const status = context?.status;
-  const code = getApiErrorCode(originalError, status);
+
+  const code = getApiErrorCode(originalError, status, context?.details);
 
   const message =
     getContextMessage(context?.message) ??
@@ -89,10 +91,16 @@ export const normalizeApiError = (
 
 /**
  * Determina el código normalizado correspondiente al error.
+ *
+ * La clasificación de los errores HTTP se mantiene genérica.
+ *
+ * Un `400` solamente se considera un error de validación cuando sus detalles
+ * tienen una estructura compatible con errores asociados a campos.
  */
 const getApiErrorCode = (
   originalError: unknown,
   status?: number,
+  details?: unknown,
 ): AppErrorCode => {
   if (status === 401) {
     return "UNAUTHORIZED";
@@ -107,6 +115,10 @@ const getApiErrorCode = (
   }
 
   if (status === 422) {
+    return "VALIDATION_ERROR";
+  }
+
+  if (status === 400 && isFieldValidationDetails(details)) {
     return "VALIDATION_ERROR";
   }
 
@@ -126,6 +138,59 @@ const getApiErrorCode = (
   }
 
   return "UNKNOWN_ERROR";
+};
+
+/**
+ * ============================================================================
+ * VALIDATION DETAILS
+ * ============================================================================
+ */
+
+/**
+ * Determina si los detalles tienen una estructura compatible con errores
+ * de validación asociados a campos.
+ *
+ * Se aceptan estructuras como:
+ *
+ * ```ts
+ * {
+ *   username: ["El usuario ya existe."],
+ *   email: ["El correo ya existe."],
+ * }
+ * ```
+ *
+ * También se acepta:
+ *
+ * ```ts
+ * {
+ *   username: "El usuario ya existe.",
+ * }
+ * ```
+ *
+ * La función no depende de un backend específico.
+ */
+const isFieldValidationDetails = (details: unknown): boolean => {
+  if (!details || typeof details !== "object" || Array.isArray(details)) {
+    return false;
+  }
+
+  const values = Object.values(details as Record<string, unknown>);
+
+  if (values.length === 0) {
+    return false;
+  }
+
+  return values.every((value) => {
+    if (typeof value === "string") {
+      return true;
+    }
+
+    return (
+      Array.isArray(value) &&
+      value.length > 0 &&
+      value.every((item) => typeof item === "string")
+    );
+  });
 };
 
 /**

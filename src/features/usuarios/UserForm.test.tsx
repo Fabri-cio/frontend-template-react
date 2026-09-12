@@ -159,4 +159,22 @@ describe("UserForm", () => {
 
     expect(screen.getByRole("button", { name: "Cancelar" })).toBeDisabled();
   });
+
+  it("muestra errores externos de los campos", () => {
+    render(
+      <UserForm
+        onSubmit={vi.fn()}
+        onCancel={vi.fn()}
+        fieldErrors={{
+          username: "El usuario ya existe.",
+          email: "El correo ya está registrado.",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("El usuario ya existe.")).toBeInTheDocument();
+    expect(
+      screen.getByText("El correo ya está registrado."),
+    ).toBeInTheDocument();
+  });
 });

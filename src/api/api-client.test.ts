@@ -622,8 +622,11 @@ describe("createApiClient", () => {
       } catch (error) {
         expect(error).toMatchObject({
           name: "AppError",
-          code: "UNKNOWN_ERROR",
+          code: "VALIDATION_ERROR",
           message: "Request failed with status 400",
+          details: {
+            message: "Invalid data",
+          },
         });
 
         expect(error).toHaveProperty("cause");
@@ -634,8 +637,38 @@ describe("createApiClient", () => {
 
         expect(appError.cause).toBeInstanceOf(AxiosError);
         expect(appError.cause?.response?.status).toBe(400);
-        expect(appError.cause?.response?.data).toEqual({
+        expect(error).toHaveProperty("details", {
           message: "Invalid data",
+        });
+      }
+    });
+
+    it("conserva los detalles de validación por campo", async () => {
+      const api = createApiClient();
+
+      const details = {
+        username: ["A user with that username already exists."],
+        email: ["user with this email already exists."],
+      };
+
+      api.instance.defaults.adapter = createErrorAdapter(
+        400,
+        details,
+        "Bad Request",
+      );
+
+      try {
+        await api.post("/users", {
+          username: "existing-user",
+          email: "existing@example.com",
+        });
+
+        throw new Error("La petición debería haber fallado");
+      } catch (error) {
+        expect(error).toMatchObject({
+          name: "AppError",
+          code: "VALIDATION_ERROR",
+          details,
         });
       }
     });
@@ -673,7 +706,10 @@ describe("createApiClient", () => {
       } catch (error) {
         expect(error).toMatchObject({
           name: "AppError",
-          code: "UNKNOWN_ERROR",
+          code: "VALIDATION_ERROR",
+          details: {
+            message: "Invalid data",
+          },
         });
 
         expect(error).toHaveProperty("cause", originalError);
