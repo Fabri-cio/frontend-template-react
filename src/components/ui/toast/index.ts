@@ -4,3 +4,5 @@ export { useToast } from "./useToast";
 export { showAppErrorToast } from "./showAppErrorToast";
 
 export type { ToastOptions } from "./ToastContext";
+export type { ToastPosition } from "./ToastProvider";
+

@@ -256,4 +256,33 @@ describe("ToastProvider", () => {
       vi.useRealTimers();
     }
   });
+
+  it("usa top-right como posición por defecto", () => {
+    render(
+      <ToastProvider>
+        <TestComponent />
+      </ToastProvider>,
+    );
+
+    const container = screen.getByLabelText("Notificaciones");
+
+    expect(container).toHaveClass("right-4");
+    expect(container).toHaveClass("top-4");
+    expect(container).toHaveClass("items-end");
+  });
+
+  it("permite configurar la posición", () => {
+    render(
+      <ToastProvider position="bottom-center">
+        <TestComponent />
+      </ToastProvider>,
+    );
+
+    const container = screen.getByLabelText("Notificaciones");
+
+    expect(container).toHaveClass("bottom-4");
+    expect(container).toHaveClass("left-1/2");
+    expect(container).toHaveClass("-translate-x-1/2");
+    expect(container).toHaveClass("items-center");
+  });
 });
