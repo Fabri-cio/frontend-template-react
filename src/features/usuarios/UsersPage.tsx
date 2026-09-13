@@ -33,7 +33,7 @@ export default function UsersPage() {
   const search = get("search") ?? "";
   const status = get("is_active") ?? "";
   const page = Number(get("page")) || 1;
-  const pageSize = Number(get("page_size")) || 5;
+  const pageSize = Number(get("page_size")) || 10; //clave
 
   /**
    * URL exacta de la lista actual.
