@@ -1,31 +1,20 @@
-import { lazy } from "react";
 import { Navigate } from "react-router-dom";
 
 import type { AppRoute } from "./route.types";
-
-const UiPlaygroundPage = lazy(
-  () => import("../../pages/ui-playground/ui-playground-page"),
-);
-
-const HomePage = lazy(() => import("../../pages/home/home-page"));
-
-const NotFoundPage = lazy(() => import("../../pages/not-found/not-found-page"));
-
-const AppLayout = lazy(() => import("../../pages/layouts/app-layout"));
-
-const DashboardPage = lazy(
-  () => import("../../pages/dashboard/dashboard-page"),
-);
-
-const UsersPage = lazy(() => import("../../features/usuarios/UsersPage"));
-
-const UserCreatePage = lazy(() => import("../../features/usuarios/UserCreatePage"));
-
-const UserEditPage = lazy(() => import("../../features/usuarios/UserEditPage"));
+import {
+  AppLayout,
+  DashboardPage,
+  HomePage,
+  NotFoundPage,
+  UiPlaygroundPage,
+  UserCreatePage,
+  UserEditPage,
+  UsersPage,
+} from "./route-components";
 
 /**
  * ============================================================================
- * APPLICATION ROUTES
+ * RUTAS DE LA APLICACIÓN
  * ============================================================================
  *
  * Configuración de rutas específica de la aplicación.
@@ -35,7 +24,7 @@ const UserEditPage = lazy(() => import("../../features/usuarios/UserEditPage"));
 export const appRoutes: AppRoute[] = [
   /**
    * --------------------------------------------------------------------------
-   * APPLICATION LAYOUT
+   * LAYOUT PRINCIPAL
    * --------------------------------------------------------------------------
    *
    * Las rutas principales de la aplicación comparten:
@@ -76,7 +65,7 @@ export const appRoutes: AppRoute[] = [
 
   /**
    * --------------------------------------------------------------------------
-   * REDIRECT
+   * REDIRECCIÓN
    * --------------------------------------------------------------------------
    */
   {
