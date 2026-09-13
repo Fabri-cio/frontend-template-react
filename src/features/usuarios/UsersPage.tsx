@@ -84,7 +84,9 @@ export default function UsersPage() {
       {
         id: "is_active", // id unico de la columna
         header: "Estado", // nombre de la columna
-        cell: (user) => // retorna un badge dependiendo si el usuario esta activo o inactivo
+        cell: (
+          user, // retorna un badge dependiendo si el usuario esta activo o inactivo
+        ) =>
           user.is_active ? (
             <Badge variant="success">Activo</Badge>
           ) : (
@@ -99,8 +101,23 @@ export default function UsersPage() {
         cell: (user) => new Date(user.date_joined).toLocaleDateString(),
         sortable: true,
       },
+      {
+        id: "actions",
+        header: "Acciones",
+        cell: (user) => (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/users/${user.id}`)}
+          >
+            Editar
+          </Button>
+        ),
+        align: "center",
+      },
     ],
-    [],
+    [navigate],
   );
 
   function handleSearchChange(value: string) {

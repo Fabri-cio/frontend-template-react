@@ -19,6 +19,7 @@ export interface UserFormProps {
   onCancel: () => void;
   isSubmitting?: boolean;
   passwordRequired?: boolean;
+  showPassword?: boolean;
   submitLabel?: string;
   fieldErrors?: FormFieldErrors;
 }
@@ -36,6 +37,7 @@ export function UserForm({
   onCancel,
   isSubmitting = false,
   passwordRequired = true,
+  showPassword = true,
   submitLabel = "Guardar",
   fieldErrors,
 }: UserFormProps) {
@@ -123,27 +125,30 @@ export function UserForm({
           />
         </FormField>
 
-        <FormField
-          label="Contraseña"
-          htmlFor="password"
-          required={passwordRequired}
-          description={
-            passwordRequired
-              ? "La contraseña es obligatoria."
-              : "Deja este campo vacío si no deseas cambiar la contraseña."
-          }
-          error={fieldErrors?.password}
-        >
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            defaultValue={initialValues?.password ?? ""}
-            autoComplete="new-password"
+        {showPassword ? (
+          <FormField
+            label="Contraseña"
+            htmlFor="password"
             required={passwordRequired}
-            disabled={isSubmitting}
-          />
-        </FormField>
+            description={
+              passwordRequired
+                ? "La contraseña es obligatoria."
+                : "Deja este campo vacío si no deseas cambiar la contraseña."
+            }
+            error={fieldErrors?.password}
+          >
+            {" "}
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              defaultValue={initialValues?.password ?? ""}
+              autoComplete="new-password"
+              required={passwordRequired}
+              disabled={isSubmitting}
+            />{" "}
+          </FormField>
+        ) : null}
 
         <FormField
           label="Estado"
