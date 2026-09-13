@@ -12,24 +12,46 @@ import {
   type DataTableSort,
 } from "../../components/ui";
 
+import { useUrlQueryParams } from "../../hooks/use-url-query-params";
 import { useUsers } from "./users.hooks";
 import type { User, UserListParams } from "./users.types";
 
 /**
- * Página genérica de gestión de usuarios.
+ * Página de gestión de usuarios.
  *
- * Consume los componentes reutilizables de DataTable
- * y conecta la tabla con los hooks específicos de la feature.
+ * El estado de búsqueda, filtros, paginación y ordenamiento
+ * se mantiene en los parámetros de consulta de la URL.
  */
 export default function UsersPage() {
   const navigate = useNavigate();
+  const { get, setMany } = useUrlQueryParams();
 
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [sort, setSort] = useState<DataTableSort | null>(null);
   const [selectedRows, setSelectedRows] = useState<Array<string | number>>([]);
+
+  const search = get("search") ?? "";
+  const status = get("is_active") ?? "";
+  const page = Number(get("page")) || 1;
+  const pageSize = Number(get("page_size")) || 10;
+
+  const sort = useMemo<DataTableSort | null>(() => {
+    const ordering = get("ordering");
+
+    if (!ordering) {
+      return null;
+    }
+
+    if (ordering.startsWith("-")) {
+      return {
+        id: ordering.slice(1),
+        direction: "desc",
+      };
+    }
+
+    return {
+      id: ordering,
+      direction: "asc",
+    };
+  }, [get]);
 
   const params = useMemo<UserListParams>(() => {
     const nextParams: UserListParams = {
@@ -41,11 +63,11 @@ export default function UsersPage() {
       nextParams.search = search.trim();
     }
 
-    if (status === "active") {
+    if (status === "true") {
       nextParams.is_active = true;
     }
 
-    if (status === "inactive") {
+    if (status === "false") {
       nextParams.is_active = false;
     }
 
@@ -82,18 +104,16 @@ export default function UsersPage() {
         sortable: true,
       },
       {
-        id: "is_active", // id unico de la columna
-        header: "Estado", // nombre de la columna
-        cell: (
-          user, // retorna un badge dependiendo si el usuario esta activo o inactivo
-        ) =>
+        id: "is_active",
+        header: "Estado",
+        cell: (user) =>
           user.is_active ? (
             <Badge variant="success">Activo</Badge>
           ) : (
             <Badge variant="secondary">Inactivo</Badge>
           ),
-        sortable: true, // significa que se puede ordenar por este campo
-        align: "center", // significa que se alinea al centro
+        sortable: true,
+        align: "center",
       },
       {
         id: "date_joined",
@@ -121,23 +141,41 @@ export default function UsersPage() {
   );
 
   function handleSearchChange(value: string) {
-    setSearch(value);
-    setPage(1);
+    setMany({
+      search: value.trim() || null,
+      page: "1",
+    });
   }
 
   function handleStatusChange(value: string) {
-    setStatus(value);
-    setPage(1);
+    setMany({
+      is_active: value || null,
+      page: "1",
+    });
+  }
+
+  function handlePageChange(value: number) {
+    setMany({
+      page: String(value),
+    });
   }
 
   function handlePageSizeChange(value: number) {
-    setPageSize(value);
-    setPage(1);
+    setMany({
+      page_size: String(value),
+      page: "1",
+    });
   }
 
   function handleSortChange(value: DataTableSort | null) {
-    setSort(value);
-    setPage(1);
+    setMany({
+      ordering: value
+        ? value.direction === "desc"
+          ? `-${value.id}`
+          : value.id
+        : null,
+      page: "1",
+    });
   }
 
   return (
@@ -164,11 +202,11 @@ export default function UsersPage() {
           onChange={handleStatusChange}
           options={[
             {
-              value: "active",
+              value: "true",
               label: "Activos",
             },
             {
-              value: "inactive",
+              value: "false",
               label: "Inactivos",
             },
           ]}
@@ -208,7 +246,7 @@ export default function UsersPage() {
         page={page}
         pageSize={pageSize}
         totalItems={totalItems}
-        onPageChange={setPage}
+        onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
       />
     </div>

@@ -94,7 +94,7 @@ describe("UserEditPage", () => {
 
     expect(screen.getByLabelText(/^Apellido$/)).toHaveValue("Pérez");
 
-    expect(screen.getByLabelText(/^Contraseña/)).toHaveValue("");
+    expect(screen.queryByLabelText(/^Contraseña/)).not.toBeInTheDocument();
 
     expect(screen.getByLabelText(/^Estado/)).toHaveValue("true");
 
@@ -287,20 +287,21 @@ describe("UserEditPage", () => {
     });
   });
 
-  it("no envía la contraseña en la actualización normal", async () => {
+  it("no muestra ni envía la contraseña en la actualización normal", async () => {
     const user = userEvent.setup();
 
     mockMutateAsync.mockResolvedValue(mockUser);
 
     renderUserEditPage();
 
-    await user.type(screen.getByLabelText(/^Contraseña/), "new-secret-123");
+    expect(screen.queryByLabelText(/^Contraseña/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
     const dialog = screen.getByRole("dialog");
 
-    expect(dialog).not.toHaveTextContent("new-secret-123");
+    expect(dialog).not.toHaveTextContent("Contraseña");
+    expect(dialog).not.toHaveTextContent("password");
 
     await user.click(
       screen.getByRole("button", { name: "Sí, guardar cambios" }),
@@ -318,6 +319,10 @@ describe("UserEditPage", () => {
         },
       });
     });
+
+    const updatePayload = mockMutateAsync.mock.calls[0][0];
+
+    expect(updatePayload.data).not.toHaveProperty("password");
   });
 
   it("muestra errores de validación en el formulario", async () => {
