@@ -9,6 +9,7 @@ import { ToastProvider } from "../../components/ui";
 
 const mockNavigate = vi.fn();
 const mockMutateAsync = vi.fn();
+const mockUseLocation = vi.fn();
 
 function renderUserCreatePage() {
   return render(
@@ -20,6 +21,7 @@ function renderUserCreatePage() {
 
 vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
+  useLocation: () => mockUseLocation(),
 }));
 
 vi.mock("./users.hooks", () => ({
@@ -34,6 +36,10 @@ describe("UserCreatePage", () => {
     vi.clearAllMocks();
     mockMutateAsync.mockReset();
     mockNavigate.mockReset();
+
+    mockUseLocation.mockReturnValue({
+      state: null,
+    });
   });
 
   it("renderiza el título y el formulario de creación", () => {
@@ -154,6 +160,48 @@ describe("UserCreatePage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("crea el usuario y regresa a la URL de origen", async () => {
+    const user = userEvent.setup();
+
+    const returnUrl =
+      "/users?page=4&page_size=5&search=juan&is_active=true&ordering=-username";
+
+    mockUseLocation.mockReturnValue({
+      state: {
+        from: returnUrl,
+      },
+    });
+
+    mockMutateAsync.mockResolvedValue({
+      id: 1,
+      username: "juan",
+      email: "juan@example.com",
+    });
+
+    renderUserCreatePage();
+
+    await user.type(screen.getByLabelText(/^Usuario/), "juan");
+
+    await user.type(
+      screen.getByLabelText(/^Correo electrónico/),
+      "juan@example.com",
+    );
+
+    await user.type(screen.getByLabelText(/^Contraseña/), "secret123");
+
+    await user.click(screen.getByRole("button", { name: "Crear usuario" }));
+
+    await user.click(screen.getByRole("button", { name: "Sí, crear" }));
+
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(returnUrl);
+    });
+  });
+
   it("omite nombre y apellido cuando están vacíos", async () => {
     const user = userEvent.setup();
 
@@ -234,6 +282,24 @@ describe("UserCreatePage", () => {
     await user.click(screen.getByRole("button", { name: "Cancelar" }));
 
     expect(mockNavigate).toHaveBeenCalledWith("/users");
+  });
+
+  it("regresa a la URL de origen al cancelar el formulario", async () => {
+    const user = userEvent.setup();
+
+    const returnUrl = "/users?page=4&page_size=5&search=juan";
+
+    mockUseLocation.mockReturnValue({
+      state: {
+        from: returnUrl,
+      },
+    });
+
+    renderUserCreatePage();
+
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(mockNavigate).toHaveBeenCalledWith(returnUrl);
   });
 
   it("muestra errores de validación en el formulario", async () => {

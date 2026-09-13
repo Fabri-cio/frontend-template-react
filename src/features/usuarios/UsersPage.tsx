@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
   Badge,
@@ -24,6 +24,8 @@ import type { User, UserListParams } from "./users.types";
  */
 export default function UsersPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const { get, setMany } = useUrlQueryParams();
 
   const [selectedRows, setSelectedRows] = useState<Array<string | number>>([]);
@@ -32,6 +34,14 @@ export default function UsersPage() {
   const status = get("is_active") ?? "";
   const page = Number(get("page")) || 1;
   const pageSize = Number(get("page_size")) || 10;
+
+  /**
+   * URL exacta de la lista actual.
+   *
+   * Se utiliza como origen al navegar hacia crear o editar.
+   * De esta forma se conservan todos los parámetros actuales.
+   */
+  const currentListUrl = `${location.pathname}${location.search}`;
 
   const sort = useMemo<DataTableSort | null>(() => {
     const ordering = get("ordering");
@@ -129,7 +139,13 @@ export default function UsersPage() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => navigate(`/users/${user.id}`)}
+            onClick={() =>
+              navigate(`/users/${user.id}`, {
+                state: {
+                  from: currentListUrl,
+                },
+              })
+            }
           >
             Editar
           </Button>
@@ -137,7 +153,7 @@ export default function UsersPage() {
         align: "center",
       },
     ],
-    [navigate],
+    [currentListUrl, navigate],
   );
 
   function handleSearchChange(value: string) {
@@ -189,7 +205,17 @@ export default function UsersPage() {
           </p>
         </div>
 
-        <Button onClick={() => navigate("/users/new")}>Nuevo usuario</Button>
+        <Button
+          onClick={() =>
+            navigate("/users/new", {
+              state: {
+                from: currentListUrl,
+              },
+            })
+          }
+        >
+          Nuevo usuario
+        </Button>
       </div>
 
       <DataTableToolbar

@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import UsersPage from "./UsersPage";
@@ -11,11 +11,32 @@ vi.mock("./users.hooks", () => ({
   useUsers: (...args: unknown[]) => mockUseUsers(...args),
 }));
 
+function NavigationStatePage() {
+  const location = useLocation();
+
+  const navigationState = location.state as { from?: string } | null;
+
+  return (
+    <div>
+      <span data-testid="navigation-path">
+        {location.pathname}
+        {location.search}
+      </span>
+
+      <span data-testid="navigation-from">{navigationState?.from ?? ""}</span>
+    </div>
+  );
+}
+
 function renderUsersPage(initialEntry = "/users") {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route path="/users" element={<UsersPage />} />
+
+        <Route path="/users/new" element={<NavigationStatePage />} />
+
+        <Route path="/users/:id" element={<NavigationStatePage />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -191,5 +212,89 @@ describe("UsersPage", () => {
         search: "juan",
       });
     });
+  });
+
+  it("conserva la URL actual al editar después de cambiar la búsqueda", async () => {
+    const user = userEvent.setup();
+
+    renderUsersPage("/users?page=4&page_size=5");
+
+    const searchInput = screen.getByPlaceholderText("Buscar usuarios...");
+
+    await user.type(searchInput, "juan");
+
+    await waitFor(() => {
+      expect(mockUseUsers).toHaveBeenLastCalledWith({
+        page: 1,
+        page_size: 5,
+        search: "juan",
+      });
+    });
+
+    await user.click(screen.getByRole("button", { name: "Editar" }));
+
+    expect(screen.getByTestId("navigation-path")).toHaveTextContent("/users/1");
+
+    expect(screen.getByTestId("navigation-from")).toHaveTextContent(
+      "/users?page=1&page_size=5&search=juan",
+    );
+  });
+
+  it("conserva la URL actual al editar con paginación, filtro y ordenamiento", async () => {
+    const user = userEvent.setup();
+
+    renderUsersPage(
+      "/users?page=4&page_size=5&search=juan&is_active=true&ordering=-username",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Editar" }));
+
+    expect(screen.getByTestId("navigation-path")).toHaveTextContent("/users/1");
+
+    expect(screen.getByTestId("navigation-from")).toHaveTextContent(
+      "/users?page=4&page_size=5&search=juan&is_active=true&ordering=-username",
+    );
+  });
+
+  it("conserva la URL actual al crear un usuario", async () => {
+    const user = userEvent.setup();
+
+    renderUsersPage(
+      "/users?page=4&page_size=5&search=juan&is_active=false&ordering=email",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Nuevo usuario" }));
+
+    expect(screen.getByTestId("navigation-path")).toHaveTextContent(
+      "/users/new",
+    );
+
+    expect(screen.getByTestId("navigation-from")).toHaveTextContent(
+      "/users?page=4&page_size=5&search=juan&is_active=false&ordering=email",
+    );
+  });
+
+  it("usa la URL actual después de cambiar el tamaño de página antes de editar", async () => {
+    const user = userEvent.setup();
+
+    renderUsersPage("/users?page=3&search=juan");
+
+    const pageSizeSelect = screen.getByLabelText("Filas por página");
+
+    await user.selectOptions(pageSizeSelect, "25");
+
+    await waitFor(() => {
+      expect(mockUseUsers).toHaveBeenLastCalledWith({
+        page: 1,
+        page_size: 25,
+        search: "juan",
+      });
+    });
+
+    await user.click(screen.getByRole("button", { name: "Editar" }));
+
+    expect(screen.getByTestId("navigation-from")).toHaveTextContent(
+      "/users?page=1&search=juan&page_size=25",
+    );
   });
 });

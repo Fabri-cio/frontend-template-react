@@ -24,7 +24,7 @@ export function DataTablePagination({
   totalItems,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [10, 25, 50, 100],
+  pageSizeOptions = [5, 10, 25, 50, 100],
   showPageSize = true,
   siblingCount = 1,
   className = "",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { getValidationFieldErrors } from "../../app/errors/validation-errors";
 import {
@@ -23,21 +23,45 @@ import { AppError } from "../../app/errors/app-error";
 import { showAppErrorToast, useToast } from "../../components/ui";
 
 /**
+ * Estado de navegación recibido desde la página de usuarios.
+ *
+ * `from` contiene la URL exacta de la lista desde la que se inició
+ * la creación del usuario.
+ */
+interface UserCreateNavigationState {
+  from?: string;
+}
+
+/**
  * Página para crear un nuevo usuario.
  *
  * La página se encarga de:
  *
  * - conectar el formulario con la mutación de creación;
  * - solicitar confirmación antes de crear el usuario;
- * - gestionar la navegación.
+ * - gestionar errores de validación;
+ * - mostrar mensajes de éxito y error;
+ * - conservar la URL de origen para regresar a la lista.
  *
  * Los componentes de UI utilizados son genéricos
  * y no contienen lógica específica de usuarios.
  */
 export default function UserCreatePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const createUser = useCreateUser();
   const toast = useToast();
+
+  const navigationState = location.state as UserCreateNavigationState | null;
+
+  /**
+   * URL a la que se debe regresar después de cancelar
+   * o completar la creación.
+   *
+   * Si la página fue abierta directamente, se utiliza
+   * `/users` como destino por defecto.
+   */
+  const returnUrl = navigationState?.from ?? "/users";
 
   const [pendingValues, setPendingValues] = useState<UserFormValues | null>(
     null,
@@ -52,7 +76,7 @@ export default function UserCreatePage() {
   }
 
   function handleCancel() {
-    navigate("/users");
+    navigate(returnUrl);
   }
 
   function handleCloseConfirmation() {
@@ -80,7 +104,6 @@ export default function UserCreatePage() {
     try {
       await createUser.mutateAsync(data);
 
-      // toast
       toast.showToast({
         variant: "success",
         title: "Usuario creado",
@@ -88,7 +111,7 @@ export default function UserCreatePage() {
       });
 
       setPendingValues(null);
-      navigate("/users");
+      navigate(returnUrl);
     } catch (error) {
       const errors = getValidationFieldErrors(error);
 

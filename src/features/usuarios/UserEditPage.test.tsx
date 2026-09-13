@@ -9,6 +9,8 @@ import { ToastProvider } from "../../components/ui";
 
 const mockNavigate = vi.fn();
 const mockMutateAsync = vi.fn();
+const mockUseLocation = vi.fn();
+const mockUseUser = vi.fn();
 
 const mockUser = {
   id: 1,
@@ -21,8 +23,6 @@ const mockUser = {
   date_joined: "2026-01-15T10:00:00Z",
 };
 
-const mockUseUser = vi.fn();
-
 function renderUserEditPage() {
   return render(
     <ToastProvider>
@@ -33,6 +33,7 @@ function renderUserEditPage() {
 
 vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
+  useLocation: () => mockUseLocation(),
   useParams: () => ({ id: "1" }),
 }));
 
@@ -47,8 +48,15 @@ vi.mock("./users.hooks", () => ({
 describe("UserEditPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
     mockMutateAsync.mockReset();
     mockNavigate.mockReset();
+
+    mockUseLocation.mockReturnValue({
+      pathname: "/users/1",
+      search: "",
+      state: null,
+    });
 
     mockUseUser.mockReturnValue({
       data: mockUser,
@@ -145,6 +153,33 @@ describe("UserEditPage", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/users");
   });
 
+  it("vuelve a la URL de origen al pulsar Volver desde el estado de error", async () => {
+    const user = userEvent.setup();
+
+    mockUseLocation.mockReturnValue({
+      pathname: "/users/1",
+      search: "",
+      state: {
+        from: "/users?page=4&page_size=5&search=juan&is_active=true",
+      },
+    });
+
+    mockUseUser.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new AppError("NOT_FOUND", "Usuario no encontrado"),
+    });
+
+    renderUserEditPage();
+
+    await user.click(screen.getByRole("button", { name: "Volver" }));
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      "/users?page=4&page_size=5&search=juan&is_active=true",
+    );
+  });
+
   it("navega a la lista al cancelar el formulario", async () => {
     const user = userEvent.setup();
 
@@ -153,6 +188,26 @@ describe("UserEditPage", () => {
     await user.click(screen.getByRole("button", { name: "Cancelar" }));
 
     expect(mockNavigate).toHaveBeenCalledWith("/users");
+  });
+
+  it("vuelve a la URL exacta desde la que se abrió la edición", async () => {
+    const user = userEvent.setup();
+
+    mockUseLocation.mockReturnValue({
+      pathname: "/users/1",
+      search: "",
+      state: {
+        from: "/users?page=3&search=juan&ordering=-username",
+      },
+    });
+
+    renderUserEditPage();
+
+    await user.click(screen.getByRole("button", { name: /cancelar/i }));
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      "/users?page=3&search=juan&ordering=-username",
+    );
   });
 
   it("muestra el modal de confirmación con los datos modificados", async () => {
@@ -389,5 +444,53 @@ describe("UserEditPage", () => {
     expect(
       screen.queryByRole("heading", { name: "Confirmar cambios" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("vuelve a la URL exacta de origen después de guardar correctamente", async () => {
+    const user = userEvent.setup();
+
+    mockUseLocation.mockReturnValue({
+      pathname: "/users/1",
+      search: "",
+      state: {
+        from: "/users?page=3&search=juan&ordering=-username",
+      },
+    });
+
+    mockMutateAsync.mockResolvedValue({
+      ...mockUser,
+      username: "juan",
+    });
+
+    renderUserEditPage();
+
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "Confirmar cambios" }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Sí, guardar cambios" }),
+    );
+
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        id: 1,
+        data: {
+          username: "juan",
+          email: "juan@example.com",
+          first_name: "Juan",
+          last_name: "Pérez",
+          is_active: true,
+        },
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(
+        "/users?page=3&search=juan&ordering=-username",
+      );
+    });
   });
 });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { AppError } from "../../app/errors/app-error";
 import { getValidationFieldErrors } from "../../app/errors/validation-errors";
@@ -21,10 +21,19 @@ import type { UserFormValues } from "./UserForm";
 import type { UpdateUserInput } from "./users.types";
 import { useUpdateUser, useUser } from "./users.hooks";
 
+interface UserEditNavigationState {
+  from?: string;
+}
+
 export default function UserEditPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const toast = useToast();
+
+  const navigationState = location.state as UserEditNavigationState | null;
+
+  const returnUrl = navigationState?.from ?? "/users";
 
   const userId = Number(id);
   const userQuery = useUser(userId);
@@ -43,7 +52,7 @@ export default function UserEditPage() {
   }
 
   function handleCancel() {
-    navigate("/users");
+    navigate(returnUrl);
   }
 
   function handleCloseConfirmation() {
@@ -75,7 +84,7 @@ export default function UserEditPage() {
       });
 
       setPendingValues(null);
-      navigate("/users");
+      navigate(returnUrl);
     } catch (error) {
       const errors = getValidationFieldErrors(error);
 
