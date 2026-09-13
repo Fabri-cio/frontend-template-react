@@ -55,13 +55,14 @@ const alignClasses: Record<TableAlign, string> = {
  */
 function Table({
   size = "default",
-  striped = false,
-  hoverable = true,
   stickyHeader = false,
   className = "",
   children,
   ...props
 }: TableProps) {
+  delete props.striped;
+  delete props.hoverable; 
+  
   const classes = ["w-full border-collapse text-sm", className]
     .filter(Boolean)
     .join(" ");

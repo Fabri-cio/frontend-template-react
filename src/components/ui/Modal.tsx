@@ -47,21 +47,15 @@ interface ModalProps {
   closeLabel?: string;
 }
 
-interface ModalHeaderProps extends HTMLAttributes<HTMLDivElement> {}
+type ModalHeaderProps = HTMLAttributes<HTMLDivElement>;
 
-interface ModalTitleProps extends Omit<
-  HTMLAttributes<HTMLHeadingElement>,
-  "id"
-> {}
+type ModalTitleProps = Omit<HTMLAttributes<HTMLHeadingElement>, "id">;
 
-interface ModalDescriptionProps extends Omit<
-  HTMLAttributes<HTMLParagraphElement>,
-  "id"
-> {}
+type ModalDescriptionProps = Omit<HTMLAttributes<HTMLParagraphElement>, "id">;
 
-interface ModalContentProps extends HTMLAttributes<HTMLDivElement> {}
+type ModalContentProps = HTMLAttributes<HTMLDivElement>;
 
-interface ModalFooterProps extends HTMLAttributes<HTMLDivElement> {}
+type ModalFooterProps = HTMLAttributes<HTMLDivElement>;
 
 const sizeClasses: Record<ModalSize, string> = {
   sm: "max-w-sm",

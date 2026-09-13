@@ -72,13 +72,23 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   );
 
   /**
-   * Tema efectivo actualmente mostrado.
+   * Tema efectivo del sistema cuando la preferencia seleccionada
+   * es "system".
    *
    * Nunca será "system".
    */
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() =>
-    resolveTheme(getStoredTheme()),
+  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(() =>
+    resolveTheme("system"),
   );
+
+  /**
+   * Tema efectivo actualmente utilizado por la aplicación.
+   *
+   * Si el usuario seleccionó "system", utilizamos el tema detectado
+   * del sistema operativo. En los demás casos utilizamos directamente
+   * la preferencia seleccionada.
+   */
+  const resolvedTheme: ResolvedTheme = theme === "system" ? systemTheme : theme;
 
   /**
    * --------------------------------------------------------------------------
@@ -87,13 +97,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
    */
 
   useLayoutEffect(() => {
-    const nextResolvedTheme = applyTheme(theme);
-
+    applyTheme(theme);
     applyColorTheme(colorTheme);
-
-    setResolvedTheme((currentTheme) =>
-      currentTheme === nextResolvedTheme ? currentTheme : nextResolvedTheme,
-    );
   }, [theme, colorTheme]);
 
   /**
@@ -105,10 +110,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const setTheme = useCallback((nextTheme: Theme) => {
     setThemeState(nextTheme);
     storeTheme(nextTheme);
-
-    const nextResolvedTheme = applyTheme(nextTheme);
-
-    setResolvedTheme(nextResolvedTheme);
+    applyTheme(nextTheme);
   }, []);
 
   /**
@@ -149,7 +151,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const handleChange = (event: MediaQueryListEvent) => {
       const nextResolvedTheme: ResolvedTheme = event.matches ? "dark" : "light";
 
-      setResolvedTheme(nextResolvedTheme);
+      setSystemTheme(nextResolvedTheme);
 
       /**
        * Aquí usamos applyResolvedTheme porque ya tenemos

@@ -1,6 +1,6 @@
 import { forwardRef, type HTMLAttributes } from "react";
 
-interface PageContainerProps extends HTMLAttributes<HTMLDivElement> {}
+type PageContainerProps = HTMLAttributes<HTMLDivElement>;
 
 const PageContainer = forwardRef<HTMLDivElement, PageContainerProps>(
   function PageContainer({ className = "", ...props }, ref) {

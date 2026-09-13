@@ -123,7 +123,8 @@ export function ToastProvider({
           .join(" ")}
       >
         {toasts.map(({ id, options }) => {
-          const { duration: _duration, ...toastProps } = options;
+          const toastProps = { ...options };
+          delete toastProps.duration;
 
           return (
             <div key={id} className="pointer-events-auto w-full">

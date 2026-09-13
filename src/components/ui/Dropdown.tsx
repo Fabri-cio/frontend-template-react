@@ -61,7 +61,7 @@ interface DropdownItemProps extends Omit<
   className?: string;
 }
 
-interface DropdownSeparatorProps extends HTMLAttributes<HTMLDivElement> {}
+type DropdownSeparatorProps = HTMLAttributes<HTMLDivElement>;
 
 function Dropdown({ children, className = "" }: DropdownProps) {
   const [open, setOpen] = useState(false);
@@ -126,20 +126,18 @@ function Dropdown({ children, className = "" }: DropdownProps) {
       const activeElement = document.activeElement;
       const currentIndex = items.findIndex((item) => item === activeElement);
 
-      let nextIndex = 0;
-
-      if (direction === "first") {
-        nextIndex = 0;
-      } else if (direction === "last") {
-        nextIndex = items.length - 1;
-      } else if (direction === "next") {
-        nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % items.length;
-      } else {
-        nextIndex =
-          currentIndex === -1
+      const nextIndex =
+        direction === "first"
+          ? 0
+          : direction === "last"
             ? items.length - 1
-            : (currentIndex - 1 + items.length) % items.length;
-      }
+            : direction === "next"
+              ? currentIndex === -1
+                ? 0
+                : (currentIndex + 1) % items.length
+              : currentIndex === -1
+                ? items.length - 1
+                : (currentIndex - 1 + items.length) % items.length;
 
       items[nextIndex]?.focus();
     },
