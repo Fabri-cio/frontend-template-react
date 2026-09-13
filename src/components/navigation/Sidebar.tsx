@@ -247,18 +247,17 @@ export function Sidebar<TItem extends SidebarItem = SidebarItem>({
   /*
    * Cerrar móvil.
    */
-  const closeMobileMenu = useCallback(
-    (restoreFocus = false) => {
-      setMobileOpen(false);
+  const closeMobileMenu = useCallback(() => {
+    setMobileOpen(false);
+  }, [setMobileOpen]);
 
-      if (restoreFocus) {
-        requestAnimationFrame(() => {
-          mobileTriggerRef.current?.focus();
-        });
-      }
-    },
-    [setMobileOpen],
-  );
+  const restoreFocusAndCloseMobileMenu = useCallback(() => {
+    setMobileOpen(false);
+
+    requestAnimationFrame(() => {
+      mobileTriggerRef.current?.focus();
+    });
+  }, [setMobileOpen]);
 
   /*
    * Seleccionar item.
@@ -286,7 +285,7 @@ export function Sidebar<TItem extends SidebarItem = SidebarItem>({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        closeMobileMenu(true);
+        restoreFocusAndCloseMobileMenu();
       }
     };
 
@@ -295,7 +294,7 @@ export function Sidebar<TItem extends SidebarItem = SidebarItem>({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mobileOpen, closeMobileMenu]);
+  }, [mobileOpen, restoreFocusAndCloseMobileMenu]);
 
   /*
    * Renderer visual por defecto.
@@ -421,7 +420,7 @@ export function Sidebar<TItem extends SidebarItem = SidebarItem>({
         <button
           type="button"
           aria-label="Cerrar menú"
-          onClick={() => closeMobileMenu(true)}
+          onClick={restoreFocusAndCloseMobileMenu}
           className="fixed inset-0 z-40 bg-black/40 md:hidden"
         />
       ) : null}
@@ -448,7 +447,7 @@ export function Sidebar<TItem extends SidebarItem = SidebarItem>({
             <button
               type="button"
               aria-label={mobileCloseLabel}
-              onClick={() => closeMobileMenu(true)}
+              onClick={restoreFocusAndCloseMobileMenu}
               className={[
                 "rounded-md p-2",
                 "text-muted-foreground",
