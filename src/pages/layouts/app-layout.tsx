@@ -11,7 +11,7 @@ export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <Sidebar
         items={navigationItems}
         mobileOpen={mobileOpen}
@@ -26,7 +26,7 @@ export function AppLayout() {
         )}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 min-h-0 flex-1 flex-col">
         <Header
           title="Frontend Template"
           search
@@ -35,7 +35,7 @@ export function AppLayout() {
           onMenuClick={() => setMobileOpen(true)}
         />
 
-        <main className="min-w-0 flex-1 overflow-x-hidden bg-background p-4 md:p-6">
+        <main className="min-w-0 min-h-0 flex-1 overflow-x-hidden overflow-y-auto bg-background p-4 md:p-6">
           <Outlet />
         </main>
       </div>
