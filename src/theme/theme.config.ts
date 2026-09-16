@@ -36,7 +36,7 @@ export const DEFAULT_THEME: Theme = "system";
  *
  * "neutral" corresponde al comportamiento original del template.
  */
-export const DEFAULT_COLOR_THEME: ColorTheme = "rose";
+export const DEFAULT_COLOR_THEME: ColorTheme = "indigo";
 
 /**
  * ----------------------------------------------------------------------------
@@ -66,6 +66,11 @@ export const COLOR_THEMES = [
   "green",
   "orange",
   "rose",
+  "indigo",
+  "teal",
+  "cyan",
+  "slate",
+  "navy",
 ] as const satisfies readonly ColorTheme[];
 
 /**
@@ -83,6 +88,11 @@ export const COLOR_THEME_LABELS: Record<ColorTheme, string> = {
   green: "Verde",
   orange: "Naranja",
   rose: "Rosa",
+  indigo: "Indigo", //5 temas mas 
+  teal: "Teal",
+  cyan: "Cian",
+  slate: "Pizarra",
+  navy: "Marino",
 };
 
 /**

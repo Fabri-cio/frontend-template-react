@@ -17,7 +17,7 @@ describe("theme.config", () => {
     });
 
     it("define rose como color por defecto", () => {
-      expect(DEFAULT_COLOR_THEME).toBe("rose");
+      expect(DEFAULT_COLOR_THEME).toBe("indigo");
     });
   });
 
@@ -44,11 +44,16 @@ describe("theme.config", () => {
         "green",
         "orange",
         "rose",
+        "indigo",
+        "teal",
+        "cyan",
+        "slate",
+        "navy",
       ]);
     });
 
     it("contiene exactamente seis colores", () => {
-      expect(COLOR_THEMES).toHaveLength(6);
+      expect(COLOR_THEMES).toHaveLength(11);
     });
 
     it("no contiene colores duplicados", () => {
@@ -71,6 +76,11 @@ describe("theme.config", () => {
         green: "Verde",
         orange: "Naranja",
         rose: "Rosa",
+        indigo: "Indigo",
+        teal: "Teal",
+        cyan: "Cian",
+        slate: "Pizarra",
+        navy: "Marino",
       });
     });
   });

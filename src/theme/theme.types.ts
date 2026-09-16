@@ -57,7 +57,12 @@ export type ColorTheme =
   | "violet"
   | "green"
   | "orange"
-  | "rose";
+  | "rose"
+  | "indigo"
+  | "teal"
+  | "cyan"
+  | "slate"
+  | "navy";
 
 /**
  * ----------------------------------------------------------------------------

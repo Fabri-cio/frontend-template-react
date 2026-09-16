@@ -71,7 +71,8 @@ describe("ThemeProvider", () => {
 
     expect(screen.getByTestId("theme")).toHaveTextContent("system");
     expect(screen.getByTestId("resolved-theme")).toHaveTextContent("light");
-    expect(screen.getByTestId("color-theme")).toHaveTextContent("rose");
+    expect(screen.getByTestId("color-theme")).toHaveTextContent("indigo");
+
   });
 
   it("inicializa usando las preferencias almacenadas", () => {

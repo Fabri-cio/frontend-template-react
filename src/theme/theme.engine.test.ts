@@ -62,12 +62,21 @@ describe("theme.engine", () => {
   });
 
   describe("isColorTheme", () => {
-    it.each(["neutral", "blue", "violet", "green", "orange", "rose"])(
-      "acepta el color %s",
-      (color) => {
-        expect(isColorTheme(color)).toBe(true);
-      },
-    );
+    it.each([
+      "neutral",
+      "blue",
+      "violet",
+      "green",
+      "orange",
+      "rose",
+      "indigo",
+      "teal",
+      "cyan",
+      "slate",
+      "navy",
+    ])("acepta el color %s", (color) => {
+      expect(isColorTheme(color)).toBe(true);
+    });
 
     it("rechaza valores inválidos", () => {
       expect(isColorTheme("red")).toBe(false);
@@ -139,13 +148,13 @@ describe("theme.engine", () => {
     });
 
     it("devuelve el color por defecto cuando no existe almacenamiento", () => {
-      expect(getStoredColorTheme()).toBe("rose");
+      expect(getStoredColorTheme()).toBe("indigo");
     });
 
     it("devuelve el color por defecto cuando el valor almacenado es inválido", () => {
       localStorage.setItem("color-theme", "invalid");
 
-      expect(getStoredColorTheme()).toBe("rose");
+      expect(getStoredColorTheme()).toBe("indigo");
     });
   });
 

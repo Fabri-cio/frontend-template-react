@@ -12,7 +12,7 @@ describe("useTheme", () => {
 
     expect(result.current.theme).toBe("system");
     expect(result.current.resolvedTheme).toBe("light");
-    expect(result.current.colorTheme).toBe("rose");
+    expect(result.current.colorTheme).toBe("indigo");
   });
 
   it("expone setTheme", () => {

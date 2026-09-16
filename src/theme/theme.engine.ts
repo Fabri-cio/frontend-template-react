@@ -50,7 +50,12 @@ export function isColorTheme(value: unknown): value is ColorTheme {
     value === "violet" ||
     value === "green" ||
     value === "orange" ||
-    value === "rose"
+    value === "rose" ||
+    value === "indigo" ||
+    value === "teal" ||
+    value === "cyan" ||
+    value === "slate" ||
+    value === "navy" //5 temas mas usados
   );
 }
 

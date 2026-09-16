@@ -5,6 +5,7 @@ import {
   AppLayout,
   DashboardPage,
   HomePage,
+  LoginPage,
   NotFoundPage,
   UiPlaygroundPage,
   UserCreatePage,
@@ -22,6 +23,16 @@ import {
  * El router genérico únicamente interpreta esta estructura.
  */
 export const appRoutes: AppRoute[] = [
+  /**
+   * --------------------------------------------------------------------------
+   * AUTENTICACIÓN
+   * --------------------------------------------------------------------------
+   */
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+
   /**
    * --------------------------------------------------------------------------
    * LAYOUT PRINCIPAL

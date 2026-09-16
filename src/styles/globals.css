@@ -284,6 +284,61 @@
   --primary-foreground: #ffffff;
 }
 
+/** 
+ * ---------------------------------------------------------------------------- 
+ * Indigo 
+ * ---------------------------------------------------------------------------- 
+ */
+
+[data-color="indigo"] {
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+}
+
+/** 
+ * ---------------------------------------------------------------------------- 
+ * Teal 
+ * ---------------------------------------------------------------------------- 
+ */
+
+[data-color="teal"] {
+  --primary: #0f766e;
+  --primary-foreground: #ffffff;
+}
+
+/** 
+ * ---------------------------------------------------------------------------- 
+ * Cyan 
+ * ---------------------------------------------------------------------------- 
+ */
+
+[data-color="cyan"] {
+  --primary: #0e7490;
+  --primary-foreground: #ffffff;
+}
+
+/** 
+ * ---------------------------------------------------------------------------- 
+ * Slate 
+ * ---------------------------------------------------------------------------- 
+ */
+
+[data-color="slate"] {
+  --primary: #475569;
+  --primary-foreground: #ffffff;
+}
+
+/** 
+ * ---------------------------------------------------------------------------- 
+ * Navy 
+ * ---------------------------------------------------------------------------- 
+ */
+
+[data-color="navy"] {
+  --primary: #1e3a5f;
+  --primary-foreground: #ffffff;
+}
+
 /**
  * ----------------------------------------------------------------------------
  * Dark theme
@@ -392,6 +447,31 @@
 .dark[data-color="rose"] {
   --primary: #f43f5e;
   --primary-foreground: #ffffff;
+}
+
+.dark[data-color="indigo"] {
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+}
+
+.dark[data-color="teal"] {
+  --primary: #14b8a6;
+  --primary-foreground: #18181b;
+}
+
+.dark[data-color="cyan"] {
+  --primary: #22d3ee;
+  --primary-foreground: #164e63;
+}
+
+.dark[data-color="slate"] {
+  --primary: #94a3b8;
+  --primary-foreground: #0f172a;
+}
+
+.dark[data-color="navy"] {
+  --primary: #60a5fa;
+  --primary-foreground: #0f172a;
 }
 
 /**

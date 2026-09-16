@@ -40,3 +40,6 @@ export const UserCreatePage = lazy(
 export const UserEditPage = lazy(
   () => import("../../features/usuarios/UserEditPage"),
 );
+
+export const LoginPage = lazy(() => import("../../features/auth/LoginPage"));
+
