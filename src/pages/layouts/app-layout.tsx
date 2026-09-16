@@ -2,32 +2,18 @@ import { useState } from "react";
 import { ChevronLeft, X } from "lucide-react";
 import { Outlet } from "react-router-dom";
 
-import { Header } from "../../components/navigation/Header";
-
-import { Sidebar, type SidebarItem } from "../../components/navigation/Sidebar";
-
-import { SidebarNavigationLink } from "../../components/navigation/SidebarNavigationLink";
-
 import { navigationItems } from "../../app/config/navigation";
+import { Header } from "../../components/navigation/Header";
+import { Sidebar } from "../../components/navigation/Sidebar";
+import { SidebarNavigationLink } from "../../components/navigation/SidebarNavigationLink";
 
 export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  /*
-   * Convertimos NavigationItem a la interfaz
-   * mínima que entiende Sidebar.
-   */
-  const sidebarItems: SidebarItem[] = navigationItems.map((item) => ({
-    id: item.id,
-    label: item.label,
-    icon: item.icon,
-    disabled: item.disabled,
-  }));
-
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <Sidebar
-        items={sidebarItems}
+        items={navigationItems}
         mobileOpen={mobileOpen}
         onMobileOpenChange={setMobileOpen}
         showMobileTrigger={false}
@@ -35,19 +21,9 @@ export function AppLayout() {
         collapseIcon={<ChevronLeft className="h-5 w-5" />}
         expandIcon={<ChevronLeft className="h-5 w-5 rotate-180" />}
         header={<SidebarBrand />}
-        renderItem={(sidebarItem, context) => {
-          const navigationItem = navigationItems.find(
-            (item) => item.id === sidebarItem.id,
-          );
-
-          if (!navigationItem) {
-            return null;
-          }
-
-          return (
-            <SidebarNavigationLink item={navigationItem} context={context} />
-          );
-        }}
+        renderItem={(item, context) => (
+          <SidebarNavigationLink item={item} context={context} />
+        )}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
