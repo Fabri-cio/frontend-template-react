@@ -78,3 +78,10 @@ export { showAppErrorToast } from "./toast/showAppErrorToast";
 export { default as Tabs } from "./Tabs";
 export type { TabItem, TabsProps } from "./Tabs";
 
+// Avatar
+export { default as Avatar } from "./Avatar";
+export type { AvatarProps, AvatarSize } from "./Avatar";
+
+// PageHeader
+export { default as PageHeader } from "./PageHeader";
+export type { BreadcrumbItem, PageHeaderProps } from "./PageHeader";
