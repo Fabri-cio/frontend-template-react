@@ -85,3 +85,7 @@ export type { AvatarProps, AvatarSize } from "./Avatar";
 // PageHeader
 export { default as PageHeader } from "./PageHeader";
 export type { BreadcrumbItem, PageHeaderProps } from "./PageHeader";
+
+// LoadingState
+export { default as LoadingState } from "./LoadingState";
+export type { LoadingStateProps } from "./LoadingState";
