@@ -46,6 +46,9 @@ export const appRoutes: AppRoute[] = [
    */
   {
     element: <AppLayout />,
+    meta: {
+      requiresAuth: true,
+    },
     children: [
       {
         path: "/",

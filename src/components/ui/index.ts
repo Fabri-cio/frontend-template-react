@@ -73,3 +73,8 @@ export type {
 export { ToastProvider, useToast } from "./toast";
 export type { ToastOptions } from "./toast";
 export { showAppErrorToast } from "./toast/showAppErrorToast";
+
+// Tabs
+export { default as Tabs } from "./Tabs";
+export type { TabItem, TabsProps } from "./Tabs";
+
