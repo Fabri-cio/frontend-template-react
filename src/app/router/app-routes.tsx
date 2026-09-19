@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 
 import type { AppRoute } from "./route.types";
 import {
+  AdminPage,
   AppLayout,
   DashboardPage,
   HomePage,
@@ -73,6 +74,10 @@ export const appRoutes: AppRoute[] = [
       {
         path: "/users/:id",
         element: <UserEditPage />,
+      },
+      {
+        path: "/admin",
+        element: <AdminPage />,
       },
     ],
   },

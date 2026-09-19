@@ -84,13 +84,13 @@ function Tabs<T extends string = string>({
         const tabClasses = [
           "relative inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-3 py-2.5",
           "text-sm font-medium",
-          "border-b-2 border-transparent",
+          "border-b-2",
           "transition-colors",
           "focus-visible:outline-none",
           "disabled:pointer-events-none disabled:opacity-50",
           isActive
-            ? "border-primary text-foreground"
-            : "text-muted-foreground hover:text-foreground",
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground",
         ]
           .filter(Boolean)
           .join(" ");

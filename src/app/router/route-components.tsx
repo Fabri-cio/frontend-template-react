@@ -43,3 +43,5 @@ export const UserEditPage = lazy(
 
 export const LoginPage = lazy(() => import("../../features/auth/LoginPage"));
 
+// admin
+export const AdminPage = lazy(() => import("../../features/admin/AdminPage"));
