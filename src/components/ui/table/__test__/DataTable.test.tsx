@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import DataTable, { type DataTableColumn } from "./DataTable";
+import DataTable, { type DataTableColumn } from "../DataTable";
 
 interface User {
   id: number;

@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./Table";
+} from "../Table";
 
 describe("Table", () => {
   it("renderiza la tabla y sus elementos correctamente", () => {

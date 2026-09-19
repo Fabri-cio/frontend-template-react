@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import Button from "../Button";
-import DataTableToolbar from "./DataTableToolbar";
+import Button from "../../Button";
+import DataTableToolbar from "../DataTableToolbar";
 
 describe("DataTableToolbar", () => {
   it("renderiza el campo de búsqueda", () => {
