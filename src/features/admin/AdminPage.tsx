@@ -1,11 +1,7 @@
 import { useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  CheckCircle2,
-  Shield,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle2, Shield, XCircle } from "lucide-react";
 
 import { adminApi } from "../admin/api";
 import {
@@ -86,6 +82,10 @@ export function AdminPage() {
       <PageHeader
         title="Administración"
         description="Usuarios, roles y permisos"
+        breadcrumb={[
+          { label: "Inicio", href: "/" },
+          { label: "Administración", href: "/admin" },
+        ]}
       />
 
       <Tabs
