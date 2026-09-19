@@ -8,7 +8,6 @@ import {
   DataTablePagination,
   DataTableToolbar,
   DataTableToolbarFilter,
-  PageHeader,
   type DataTableColumn,
   type DataTableSort,
 } from "../../components/ui";
@@ -197,25 +196,6 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Usuarios"
-        description="Gestiona los usuarios del sistema."
-        breadcrumb={[{ label: "Administración" }]}
-        actions={
-          <Button
-            onClick={() =>
-              navigate("/users/new", {
-                state: {
-                  from: currentListUrl,
-                },
-              })
-            }
-          >
-            Nuevo usuario
-          </Button>
-        }
-      />
-
       <DataTableToolbar
         search={search}
         onSearchChange={handleSearchChange}

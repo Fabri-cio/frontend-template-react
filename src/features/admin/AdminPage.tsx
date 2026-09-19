@@ -3,18 +3,13 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   CheckCircle2,
-  Edit2,
-  Lock,
   Shield,
-  UserPlus,
   XCircle,
 } from "lucide-react";
 
 import { adminApi } from "../admin/api";
 import {
-  Avatar,
   Badge,
-  Button,
   Card,
   CardContent,
   CardHeader,
@@ -30,8 +25,9 @@ import {
   Tabs,
 } from "../../components/ui";
 import { ROLE_LABELS } from "../../constants";
-import { formatDate } from "../../utils";
+// import { formatDate } from "../../utils"; ojo
 import type { Role } from "../../types";
+import UsersPage from "../usuarios/UsersPage";
 
 const PERMISSIONS_MATRIX = [
   {
@@ -90,7 +86,6 @@ export function AdminPage() {
       <PageHeader
         title="Administración"
         description="Usuarios, roles y permisos"
-        breadcrumb={[{ label: "Administración" }]}
       />
 
       <Tabs
@@ -114,101 +109,8 @@ export function AdminPage() {
       />
 
       {tab === "usuarios" && (
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle>Usuarios del sistema</CardTitle>
-
-              <Button size="sm">
-                <UserPlus className="size-4" />
-                Nuevo usuario
-              </Button>
-            </div>
-          </CardHeader>
-
-          <Table hoverable>
-            <TableHeader>
-              <TableRow hoverable={false}>
-                <TableHead>Usuario</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Último acceso</TableHead>
-                <TableHead align="right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {usuarios.map((usuario) => (
-                <TableRow key={usuario.id} hoverable>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar name={usuario.name} size="sm" />
-
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-foreground">
-                          {usuario.name}
-                        </p>
-
-                        <p className="truncate text-xs text-muted-foreground">
-                          {usuario.email}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-
-                  <TableCell>
-                    <Badge
-                      className={[
-                        "border-primary/20",
-                        "bg-primary/10",
-                        "text-primary",
-                      ].join(" ")}
-                    >
-                      {ROLE_LABELS[usuario.role]}
-                    </Badge>
-                  </TableCell>
-
-                  <TableCell>
-                    {usuario.active ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
-                        <CheckCircle2 className="size-4" />
-                        Activo
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                        <XCircle className="size-4" />
-                        Inactivo
-                      </span>
-                    )}
-                  </TableCell>
-
-                  <TableCell className="text-xs text-muted-foreground">
-                    {usuario.lastLogin ? formatDate(usuario.lastLogin) : "—"}
-                  </TableCell>
-
-                  <TableCell align="right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        type="button"
-                        size="sm"
-                        aria-label={`Editar usuario ${usuario.name}`}
-                      >
-                        <Edit2 className="size-4" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        size="sm"
-                        aria-label={`Bloquear usuario ${usuario.name}`}
-                      >
-                        <Lock className="size-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <Card className="overflow-hidden p-4">
+          <UsersPage />
         </Card>
       )}
 
