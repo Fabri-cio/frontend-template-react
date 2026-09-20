@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import Input from "./Input";
+import Input from "../Input";
 
 describe("Input", () => {
   it("renderiza correctamente", () => {

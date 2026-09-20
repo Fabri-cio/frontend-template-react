@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { Sidebar, type SidebarItem } from "./Sidebar";
+import { Sidebar, type SidebarItem } from "../Sidebar";
 
 describe("Sidebar", () => {
   const items: SidebarItem[] = [

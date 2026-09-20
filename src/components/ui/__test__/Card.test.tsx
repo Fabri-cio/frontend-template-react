@@ -8,7 +8,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./Card";
+} from "../Card";
 
 describe("Card", () => {
   it("renderiza correctamente", () => {

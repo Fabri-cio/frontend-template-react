@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import Avatar from "./Avatar";
+import Avatar from "../Avatar";
 
 describe("Avatar", () => {
   it("muestra las iniciales cuando no se proporciona una imagen", () => {

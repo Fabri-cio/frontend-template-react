@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import PageContainer from "./PageContainer";
+import PageContainer from "../PageContainer";
 
 describe("PageContainer", () => {
   it("renderiza correctamente", () => {

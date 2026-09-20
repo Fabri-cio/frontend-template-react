@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import Toast from "./Toast";
+import Toast from "../Toast";
 
 describe("Toast", () => {
   it("renderiza el mensaje", () => {

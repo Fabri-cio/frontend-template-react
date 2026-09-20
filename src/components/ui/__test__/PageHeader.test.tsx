@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import PageHeader from "./PageHeader";
+import PageHeader from "../PageHeader";
 
 describe("PageHeader", () => {
   it("renderiza el título como heading principal", () => {

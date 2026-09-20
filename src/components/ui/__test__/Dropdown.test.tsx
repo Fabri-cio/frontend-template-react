@@ -7,7 +7,7 @@ import {
   DropdownItem,
   DropdownSeparator,
   DropdownTrigger,
-} from "./Dropdown";
+} from "../Dropdown";
 
 function renderDropdown() {
   const onFirstClick = vi.fn();

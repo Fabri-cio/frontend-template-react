@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { AppError } from "../../../app/errors/app-error";
-import type { ToastContextValue } from "./ToastContext";
-import { showAppErrorToast } from "./showAppErrorToast";
+import { AppError } from "../../../../app/errors/app-error";
+import type { ToastContextValue } from "../ToastContext";
+import { showAppErrorToast } from "../showAppErrorToast";
 
 function createToastMock(): ToastContextValue {
   return {

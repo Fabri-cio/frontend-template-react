@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import FormActions from "./FormActions";
+import FormActions from "../FormActions";
 
 describe("FormActions", () => {
   it("renderiza sus acciones", () => {

@@ -8,7 +8,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "./Modal";
+} from "../Modal";
 
 function renderModal(props: Partial<React.ComponentProps<typeof Modal>> = {}) {
   const onClose = vi.fn();
