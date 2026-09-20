@@ -1,4 +1,11 @@
-import { Home, LayoutDashboard, PanelsTopLeft, Pickaxe, User, Users } from "lucide-react";
+import {
+  Home,
+  LayoutDashboard,
+  PanelsTopLeft,
+  Pickaxe,
+  User,
+  Users,
+} from "lucide-react";
 
 import type { SidebarItem } from "../../components/navigation";
 
@@ -40,32 +47,34 @@ export const navigationItems: NavigationItem[] = [
     href: "/",
     icon: <Home className="size-5" />,
   },
+  // {
+  //   id: "dashboard",
+  //   label: "Dashboard",
+  //   href: "/dashboard",
+  //   icon: <LayoutDashboard className="size-5" />,
+  // },
+  // {
+  //   id: "ui-playground",
+  //   label: "UI Playground",
+  //   href: "/ui-playground",
+  //   icon: <PanelsTopLeft className="size-5" />,
+  // },
+  // {
+  //   id: "users",
+  //   label: "Usuarios",
+  //   href: "/users",
+  //   icon: <User className="size-5" />,
+  // },
   {
-    id: "dashboard",
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: <LayoutDashboard className="size-5" />,
-  },
-  {
-    id: "ui-playground",
-    label: "UI Playground",
-    href: "/ui-playground",
-    icon: <PanelsTopLeft className="size-5" />,
-  },
-  {
-    id: "users",
-    label: "Usuarios",
-    href: "/users",
-    icon: <User className="size-5" />,
-  },{
     id: "admin",
     label: "Admin",
     href: "/admin",
     icon: <Users className="size-5" />,
-  },{
+  },
+  {
     id: "produccion",
     label: "Producción",
     href: "/produccion",
     icon: <Pickaxe className="size-5" />,
-  }
+  },
 ];

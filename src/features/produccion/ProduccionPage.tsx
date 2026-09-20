@@ -1,5 +1,6 @@
+import { useState } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
-import { Clock, Factory, Plus, User } from "lucide-react";
+import { Clock, Factory, User } from "lucide-react";
 
 import {
   KanbanBoard,
@@ -7,13 +8,13 @@ import {
   KanbanColumn,
 } from "../../components/ui/kanban";
 
-import { Avatar, Badge, Button, PageHeader, ProgressBar } from "../../components/ui";
+import { Avatar, Badge, PageHeader, ProgressBar } from "../../components/ui";
 
 // ============================================================================
 // CONEXIÓN REAL — TEMPORALMENTE COMENTADA
 // ============================================================================
 //
-// Cuando dejemos el mock, descomentaremos:
+// Cuando dejemos de usar el mock:
 //
 // import { useProduccionOperaciones } from "./produccion.hooks";
 //
@@ -24,7 +25,7 @@ import { Avatar, Badge, Button, PageHeader, ProgressBar } from "../../components
 //   isLoading,
 // } = useProduccionOperaciones();
 //
-// De esta forma:
+// Luego:
 //
 // ProduccionPage
 //      ↓
@@ -40,17 +41,15 @@ import { Avatar, Badge, Button, PageHeader, ProgressBar } from "../../components
 //
 // ============================================================================
 
-// import { useProduccionOperaciones } from "./produccion.hooks";
-
 import type { ProduccionOperacionEstado } from "./produccion.types";
 
 /**
  * ============================================================================
- * CONFIGURACIÓN DEL TABLERO
+ * COLUMNAS
  * ============================================================================
  *
- * Los IDs de las columnas corresponden a los estados reales
- * de ProduccionOperacion en el backend.
+ * Estas columnas corresponden a los estados reales de
+ * ProduccionOperacion en el backend.
  */
 const PRODUCCION_COLUMNAS: Array<{
   id: ProduccionOperacionEstado;
@@ -86,12 +85,13 @@ const PRODUCCION_COLUMNAS: Array<{
 
 /**
  * ============================================================================
- * MOCK TEMPORAL
+ * MOCK
  * ============================================================================
  *
- * Este modelo es SOLO para la prueba visual del tablero.
+ * Los campos siguientes son exclusivamente para la demostración visual.
  *
- * Los campos adicionales:
+ * En el backend actual NO forman parte directamente de
+ * ProduccionOperacion:
  *
  * - pedidoNumero
  * - maquinaNombre
@@ -101,35 +101,52 @@ const PRODUCCION_COLUMNAS: Array<{
  * - tiempoTranscurrido
  * - tiempoEstimado
  *
- * NO forman parte actualmente de ProduccionOperacion del backend.
- *
- * Cuando conectemos la API real, este mock se eliminará.
+ * Estos campos desaparecerán cuando conectemos la información real.
  */
 type ProduccionOperacionMock = {
   id: number;
+
   orden_ruta: number;
   ruta_operacion: number;
   resultado_viabilidad: number;
   equipo: number;
+
   numero_operacion: number;
+
   fecha_inicio_planificada: string;
   fecha_inicio_real: string | null;
+
   fecha_fin_planificada: string;
   fecha_fin_real: string | null;
+
   estado: ProduccionOperacionEstado;
+
   cantidad_producida: string;
+
   observaciones: string;
+
   created_at: string;
   updated_at: string;
 
-  // Datos visuales temporales del mock.
+  // --------------------------------------------------------------------------
+  // Datos visuales temporales
+  // --------------------------------------------------------------------------
+
   pedidoNumero: string;
   maquinaNombre: string;
   operador: string;
+
   prioridad: "baja" | "normal" | "alta" | "urgente";
+
   cantidad_planificada: number;
+
   tiempoTranscurrido: string;
   tiempoEstimado: string;
+
+  /**
+   * Posición utilizada únicamente para la prueba local del Kanban.
+   */
+  order: number;
 };
 
 const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
@@ -140,13 +157,19 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     resultado_viabilidad: 201,
     equipo: 1,
     numero_operacion: 1,
+
     fecha_inicio_planificada: "2026-09-20T08:00:00",
     fecha_inicio_real: null,
+
     fecha_fin_planificada: "2026-09-20T12:00:00",
     fecha_fin_real: null,
+
     estado: "pendiente",
-    cantidad_producida: "0",
+
+    cantidad_producida: "125",
+
     observaciones: "",
+
     created_at: "2026-09-19T10:00:00",
     updated_at: "2026-09-19T10:00:00",
 
@@ -155,8 +178,9 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     operador: "Juan Pérez",
     prioridad: "alta",
     cantidad_planificada: 500,
-    tiempoTranscurrido: "0h",
+    tiempoTranscurrido: "1h",
     tiempoEstimado: "4h",
+    order: 0,
   },
 
   {
@@ -166,13 +190,19 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     resultado_viabilidad: 202,
     equipo: 2,
     numero_operacion: 1,
+
     fecha_inicio_planificada: "2026-09-20T07:30:00",
     fecha_inicio_real: null,
+
     fecha_fin_planificada: "2026-09-20T11:30:00",
     fecha_fin_real: null,
+
     estado: "pendiente",
-    cantidad_producida: "120",
+
+    cantidad_producida: "240",
+
     observaciones: "",
+
     created_at: "2026-09-19T10:10:00",
     updated_at: "2026-09-19T10:10:00",
 
@@ -181,8 +211,9 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     operador: "María López",
     prioridad: "normal",
     cantidad_planificada: 600,
-    tiempoTranscurrido: "1h",
+    tiempoTranscurrido: "1h 30m",
     tiempoEstimado: "4h",
+    order: 1,
   },
 
   {
@@ -192,13 +223,19 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     resultado_viabilidad: 203,
     equipo: 3,
     numero_operacion: 2,
+
     fecha_inicio_planificada: "2026-09-20T08:00:00",
     fecha_inicio_real: "2026-09-20T08:05:00",
+
     fecha_fin_planificada: "2026-09-20T14:00:00",
     fecha_fin_real: null,
+
     estado: "en_proceso",
+
     cantidad_producida: "325",
+
     observaciones: "",
+
     created_at: "2026-09-19T10:20:00",
     updated_at: "2026-09-20T10:00:00",
 
@@ -209,6 +246,7 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     cantidad_planificada: 500,
     tiempoTranscurrido: "2h 15m",
     tiempoEstimado: "6h",
+    order: 0,
   },
 
   {
@@ -218,13 +256,19 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     resultado_viabilidad: 204,
     equipo: 4,
     numero_operacion: 2,
+
     fecha_inicio_planificada: "2026-09-20T09:00:00",
     fecha_inicio_real: "2026-09-20T09:02:00",
+
     fecha_fin_planificada: "2026-09-20T15:00:00",
     fecha_fin_real: null,
+
     estado: "en_proceso",
+
     cantidad_producida: "280",
+
     observaciones: "",
+
     created_at: "2026-09-19T10:30:00",
     updated_at: "2026-09-20T10:15:00",
 
@@ -235,6 +279,7 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     cantidad_planificada: 400,
     tiempoTranscurrido: "2h",
     tiempoEstimado: "6h",
+    order: 1,
   },
 
   {
@@ -244,13 +289,19 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     resultado_viabilidad: 205,
     equipo: 5,
     numero_operacion: 3,
+
     fecha_inicio_planificada: "2026-09-19T08:00:00",
     fecha_inicio_real: "2026-09-19T08:03:00",
+
     fecha_fin_planificada: "2026-09-19T14:00:00",
     fecha_fin_real: "2026-09-19T13:35:00",
+
     estado: "completada",
+
     cantidad_producida: "500",
+
     observaciones: "Producción completada correctamente.",
+
     created_at: "2026-09-18T10:00:00",
     updated_at: "2026-09-19T13:35:00",
 
@@ -261,6 +312,7 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     cantidad_planificada: 500,
     tiempoTranscurrido: "5h 35m",
     tiempoEstimado: "6h",
+    order: 0,
   },
 
   {
@@ -270,13 +322,19 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     resultado_viabilidad: 206,
     equipo: 6,
     numero_operacion: 3,
+
     fecha_inicio_planificada: "2026-09-19T07:00:00",
     fecha_inicio_real: "2026-09-19T07:10:00",
+
     fecha_fin_planificada: "2026-09-19T13:00:00",
     fecha_fin_real: "2026-09-19T12:20:00",
+
     estado: "completada",
+
     cantidad_producida: "800",
+
     observaciones: "",
+
     created_at: "2026-09-18T10:10:00",
     updated_at: "2026-09-19T12:20:00",
 
@@ -287,6 +345,7 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     cantidad_planificada: 800,
     tiempoTranscurrido: "5h 10m",
     tiempoEstimado: "6h",
+    order: 1,
   },
 
   {
@@ -296,13 +355,19 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     resultado_viabilidad: 207,
     equipo: 7,
     numero_operacion: 4,
+
     fecha_inicio_planificada: "2026-09-18T08:00:00",
     fecha_inicio_real: "2026-09-18T08:10:00",
+
     fecha_fin_planificada: "2026-09-18T10:00:00",
     fecha_fin_real: "2026-09-18T09:00:00",
+
     estado: "cancelada",
+
     cantidad_producida: "100",
+
     observaciones: "Orden cancelada por cambio de especificación.",
+
     created_at: "2026-09-17T09:00:00",
     updated_at: "2026-09-18T09:00:00",
 
@@ -313,11 +378,45 @@ const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
     cantidad_planificada: 300,
     tiempoTranscurrido: "1h",
     tiempoEstimado: "2h",
+    order: 0,
   },
 ];
 
 /**
- * Obtiene la información visual asociada a una prioridad.
+ * ============================================================================
+ * TRANSICIONES PERMITIDAS EN EL MOCK
+ * ============================================================================
+ *
+ * Se basan en el flujo que actualmente implementa el backend:
+ *
+ * pendiente -> en_proceso
+ * en_proceso -> completada
+ *
+ * Cancelada no tiene actualmente una acción específica en
+ * ProduccionOperacionViewSet.
+ */
+const ALLOWED_TRANSITIONS: Record<
+  ProduccionOperacionEstado,
+  ProduccionOperacionEstado[]
+> = {
+  pendiente: ["en_proceso"],
+  en_proceso: ["completada"],
+  completada: [],
+  cancelada: [],
+};
+
+/**
+ * Comprueba si una transición está permitida.
+ */
+function isAllowedTransition(
+  from: ProduccionOperacionEstado,
+  to: ProduccionOperacionEstado,
+): boolean {
+  return ALLOWED_TRANSITIONS[from].includes(to);
+}
+
+/**
+ * Devuelve la configuración visual correspondiente a una prioridad.
  */
 function getPriorityConfig(priority: ProduccionOperacionMock["prioridad"]) {
   const config = {
@@ -347,7 +446,7 @@ function getPriorityConfig(priority: ProduccionOperacionMock["prioridad"]) {
 }
 
 /**
- * Formatea fechas recibidas desde el backend.
+ * Formatea fechas para la interfaz.
  */
 function formatDateTime(value: string | null): string {
   if (!value) {
@@ -367,7 +466,7 @@ function formatDateTime(value: string | null): string {
 }
 
 /**
- * Formatea cantidades numéricas.
+ * Formatea cantidades.
  */
 function formatQuantity(value: string | number): string {
   const numericValue = Number(value);
@@ -383,9 +482,6 @@ function formatQuantity(value: string | number): string {
 
 /**
  * Calcula el porcentaje producido.
- *
- * Aquí sí podemos usar la cantidad planificada porque el mock
- * temporal incluye ese dato.
  */
 function calculateProgress(produced: string, planned: number): number {
   const producedValue = Number(produced);
@@ -406,12 +502,8 @@ function calculateProgress(produced: string, planned: number): number {
 
 /**
  * ============================================================================
- * CONTENIDO DE LA TARJETA
+ * TARJETA DE PRODUCCIÓN
  * ============================================================================
- *
- * Este componente sí conoce Producción.
- *
- * `KanbanCard`, en cambio, sigue siendo completamente genérico.
  */
 function ProduccionCardContent({
   operation,
@@ -424,8 +516,6 @@ function ProduccionCardContent({
     operation.cantidad_producida,
     operation.cantidad_planificada,
   );
-
-  const progressVariant = progress === 100 ? "success" : "primary";
 
   return (
     <div className="space-y-3">
@@ -464,7 +554,7 @@ function ProduccionCardContent({
       <ProgressBar
         value={Number(operation.cantidad_producida)}
         max={operation.cantidad_planificada}
-        variant={progressVariant}
+        variant={progress === 100 ? "success" : "primary"}
         showLabel
       />
 
@@ -473,8 +563,6 @@ function ProduccionCardContent({
           {formatQuantity(operation.cantidad_producida)} /{" "}
           {formatQuantity(operation.cantidad_planificada)}
         </span>
-
-        <span>{progress}%</span>
       </div>
 
       {/* Tiempo */}
@@ -529,65 +617,186 @@ function ProduccionCardContent({
 
 /**
  * ============================================================================
- * PÁGINA
+ * REORDENAMIENTO LOCAL DEL MOCK
  * ============================================================================
+ *
+ * Actualiza las posiciones después de un movimiento.
+ */
+function normalizeOrder(
+  operations: ProduccionOperacionMock[],
+): ProduccionOperacionMock[] {
+  return PRODUCCION_COLUMNAS.flatMap((column) =>
+    operations
+      .filter((operation) => operation.estado === column.id)
+      .sort((a, b) => a.order - b.order)
+      .map((operation, index) => ({
+        ...operation,
+        order: index,
+      })),
+  );
+}
+
+/**
+ * Página principal de Producción.
  */
 export default function ProduccionPage() {
   /**
-   * ========================================================================
-   * MOCK TEMPORAL
-   * ========================================================================
+   * ==========================================================================
+   * ESTADO LOCAL DEL MOCK
+   * ==========================================================================
    *
-   * Por ahora NO consultamos React Query.
+   * Este estado existe únicamente para probar el comportamiento del Kanban.
    *
-   * La página utiliza:
-   *
-   * MOCK_OPERACIONES
-   *
-   * para poder desarrollar y revisar visualmente el Kanban.
+   * El backend no recibe ninguna petición.
    */
-
-  const operations = MOCK_OPERACIONES;
+  const [operations, setOperations] =
+    useState<ProduccionOperacionMock[]>(MOCK_OPERACIONES);
 
   /**
-   * ========================================================================
-   * CONEXIÓN REAL — COMENTADA
-   * ========================================================================
+   * ==========================================================================
+   * DRAG & DROP
+   * ==========================================================================
    *
-   * Cuando queramos conectar el backend:
-   *
-   * const {
-   *   data: operations = [],
-   *   isLoading,
-   * } = useProduccionOperaciones();
-   *
-   * if (isLoading) {
-   *   return (
-   *     <LoadingState message="Cargando producción..." />
-   *   );
-   * }
-   */
-
-  /**
-   * Actualmente el drag & drop solamente muestra en consola
-   * qué operación se movió.
-   *
-   * Todavía no cambiamos el backend.
+   * Aquí simulamos lo que posteriormente hará la API real.
    */
   const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) {
       return;
     }
 
-    if (result.source.droppableId === result.destination.droppableId) {
+    const sourceStatus = source.droppableId as ProduccionOperacionEstado;
+
+    const destinationStatus =
+      destination.droppableId as ProduccionOperacionEstado;
+
+    /**
+     * Si solamente cambió la posición dentro de la misma columna,
+     * también actualizamos el orden local.
+     */
+    if (
+      sourceStatus === destinationStatus &&
+      source.index === destination.index
+    ) {
       return;
     }
 
-    console.debug("[Producción] Movimiento de operación:", {
-      operationId: result.draggableId,
-      from: result.source.droppableId,
-      to: result.destination.droppableId,
-      destinationIndex: result.destination.index,
+    setOperations((currentOperations) => {
+      const movingOperation = currentOperations.find(
+        (operation) => String(operation.id) === draggableId,
+      );
+
+      if (!movingOperation) {
+        return currentOperations;
+      }
+
+      /**
+       * ----------------------------------------------------------------------
+       * MISMA COLUMNA
+       * ----------------------------------------------------------------------
+       */
+      if (sourceStatus === destinationStatus) {
+        const columnOperations = currentOperations
+          .filter((operation) => operation.estado === sourceStatus)
+          .sort((a, b) => a.order - b.order);
+
+        const movingIndex = columnOperations.findIndex(
+          (operation) => operation.id === movingOperation.id,
+        );
+
+        if (movingIndex === -1) {
+          return currentOperations;
+        }
+
+        const nextColumnOperations = [...columnOperations];
+
+        const [removed] = nextColumnOperations.splice(movingIndex, 1);
+
+        nextColumnOperations.splice(destination.index, 0, removed);
+
+        const reordered = currentOperations.map((operation) => {
+          const nextIndex = nextColumnOperations.findIndex(
+            (item) => item.id === operation.id,
+          );
+
+          if (nextIndex === -1) {
+            return operation;
+          }
+
+          return {
+            ...operation,
+            order: nextIndex,
+          };
+        });
+
+        return normalizeOrder(reordered);
+      }
+
+      /**
+       * ----------------------------------------------------------------------
+       * CAMBIO DE COLUMNA
+       * ----------------------------------------------------------------------
+       *
+       * En la prueba respetamos el flujo real del backend.
+       */
+      if (!isAllowedTransition(sourceStatus, destinationStatus)) {
+        console.debug("[Producción] Transición no permitida en el mock:", {
+          operationId: draggableId,
+          from: sourceStatus,
+          to: destinationStatus,
+        });
+
+        return currentOperations;
+      }
+
+      /**
+       * Operaciones de la columna origen, sin la tarjeta movida.
+       */
+      const sourceOperations = currentOperations
+        .filter(
+          (operation) =>
+            operation.estado === sourceStatus &&
+            operation.id !== movingOperation.id,
+        )
+        .sort((a, b) => a.order - b.order);
+
+      /**
+       * Operaciones de la columna destino.
+       */
+      const destinationOperations = currentOperations
+        .filter((operation) => operation.estado === destinationStatus)
+        .sort((a, b) => a.order - b.order);
+
+      /**
+       * Insertamos la tarjeta en la posición elegida.
+       */
+      destinationOperations.splice(destination.index, 0, {
+        ...movingOperation,
+        estado: destinationStatus,
+      });
+
+      /**
+       * Reconstruimos todas las operaciones respetando
+       * el orden visual de cada columna.
+       */
+      const nextOperations = [
+        ...currentOperations.filter(
+          (operation) =>
+            operation.estado !== sourceStatus &&
+            operation.estado !== destinationStatus,
+        ),
+        ...sourceOperations.map((operation, index) => ({
+          ...operation,
+          order: index,
+        })),
+        ...destinationOperations.map((operation, index) => ({
+          ...operation,
+          order: index,
+        })),
+      ];
+
+      return normalizeOrder(nextOperations);
     });
   };
 
@@ -601,19 +810,13 @@ export default function ProduccionPage() {
             label: "Producción",
           },
         ]}
-        actions={
-          <Button variant="outline">
-            <Plus className="size-4" />
-            Nueva operación
-          </Button>
-        }
       />
 
       <KanbanBoard onDragEnd={handleDragEnd}>
         {PRODUCCION_COLUMNAS.map((column) => {
-          const columnOperations = operations.filter(
-            (operation) => operation.estado === column.id,
-          );
+          const columnOperations = operations
+            .filter((operation) => operation.estado === column.id)
+            .sort((a, b) => a.order - b.order);
 
           return (
             <KanbanColumn
