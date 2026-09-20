@@ -28,6 +28,9 @@ export type {
   DataTableProps,
   DataTableColumn,
   DataTableSort,
+  DataTableFilters,
+  DataTableFilterType,
+  DataTableFilterOption,
   SortDirection,
 } from "./DataTable";
 

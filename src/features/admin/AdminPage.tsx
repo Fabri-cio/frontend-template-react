@@ -109,7 +109,7 @@ export function AdminPage() {
       />
 
       {tab === "usuarios" && (
-        <Card className="overflow-hidden p-4">
+        <Card className="overflow-hidden p-2">
           <UsersPage />
         </Card>
       )}

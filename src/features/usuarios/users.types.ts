@@ -30,6 +30,9 @@ export interface UpdateUserInput {
 }
 
 export interface UserListParams extends CrudListParams {
+  username?: string;
+  first_name?: string;
+  email?: string;
   is_active?: boolean;
   search?: string;
   ordering?: string;

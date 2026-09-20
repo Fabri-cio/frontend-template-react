@@ -7,8 +7,8 @@ import {
   DataTable,
   DataTablePagination,
   DataTableToolbar,
-  DataTableToolbarFilter,
   type DataTableColumn,
+  type DataTableFilters,
   type DataTableSort,
 } from "../../components/ui";
 
@@ -29,11 +29,17 @@ export default function UsersPage() {
   const { get, setMany } = useUrlQueryParams();
 
   const [selectedRows, setSelectedRows] = useState<Array<string | number>>([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   const search = get("search") ?? "";
+
+  const username = get("username") ?? "";
+  const email = get("email") ?? "";
+  const firstName = get("first_name") ?? "";
   const status = get("is_active") ?? "";
+
   const page = Number(get("page")) || 1;
-  const pageSize = Number(get("page_size")) || 10; //clave
+  const pageSize = Number(get("page_size")) || 10;
 
   /**
    * URL exacta de la lista actual.
@@ -42,6 +48,16 @@ export default function UsersPage() {
    * De esta forma se conservan todos los parámetros actuales.
    */
   const currentListUrl = `${location.pathname}${location.search}`;
+
+  const filters = useMemo<DataTableFilters>(
+    () => ({
+      username,
+      email,
+      first_name: firstName,
+      is_active: status,
+    }),
+    [username, email, firstName, status],
+  );
 
   const sort = useMemo<DataTableSort | null>(() => {
     const ordering = get("ordering");
@@ -73,6 +89,18 @@ export default function UsersPage() {
       nextParams.search = search.trim();
     }
 
+    if (username.trim()) {
+      nextParams.username = username.trim();
+    }
+
+    if (email.trim()) {
+      nextParams.email = email.trim();
+    }
+
+    if (firstName.trim()) {
+      nextParams.first_name = firstName.trim();
+    }
+
     if (status === "true") {
       nextParams.is_active = true;
     }
@@ -86,7 +114,7 @@ export default function UsersPage() {
     }
 
     return nextParams;
-  }, [page, pageSize, search, status, sort]);
+  }, [page, pageSize, search, username, email, firstName, status, sort]);
 
   const { data, isLoading, isError, error } = useUsers(params);
 
@@ -100,18 +128,24 @@ export default function UsersPage() {
         header: "Usuario",
         accessor: "username",
         sortable: true,
+        filterable: true,
+        filterType: "text",
       },
       {
         id: "email",
         header: "Correo",
         accessor: "email",
         sortable: true,
+        filterable: true,
+        filterType: "text",
       },
       {
         id: "first_name",
         header: "Nombre",
         cell: (user) => `${user.first_name} ${user.last_name}`.trim() || "—",
         sortable: true,
+        filterable: true,
+        filterType: "text",
       },
       {
         id: "is_active",
@@ -123,6 +157,18 @@ export default function UsersPage() {
             <Badge variant="secondary">Inactivo</Badge>
           ),
         sortable: true,
+        filterable: true,
+        filterType: "select",
+        filterOptions: [
+          {
+            value: "true",
+            label: "Activo",
+          },
+          {
+            value: "false",
+            label: "Inactivo",
+          },
+        ],
         align: "center",
       },
       {
@@ -163,9 +209,23 @@ export default function UsersPage() {
     });
   }
 
-  function handleStatusChange(value: string) {
+  function getStringFilter(
+    value: DataTableFilters[string] | undefined,
+  ): string {
+    return typeof value === "string" ? value : "";
+  }
+
+  function handleFiltersChange(nextFilters: DataTableFilters) {
+    const username = getStringFilter(nextFilters.username);
+    const email = getStringFilter(nextFilters.email);
+    const firstName = getStringFilter(nextFilters.first_name);
+    const status = getStringFilter(nextFilters.is_active);
+
     setMany({
-      is_active: value || null,
+      username: username.trim() || null,
+      email: email.trim() || null,
+      first_name: firstName.trim() || null,
+      is_active: status || null,
       page: "1",
     });
   }
@@ -200,24 +260,9 @@ export default function UsersPage() {
         search={search}
         onSearchChange={handleSearchChange}
         searchPlaceholder="Buscar usuarios..."
-      >
-        <DataTableToolbarFilter
-          value={status}
-          onChange={handleStatusChange}
-          options={[
-            {
-              value: "true",
-              label: "Activos",
-            },
-            {
-              value: "false",
-              label: "Inactivos",
-            },
-          ]}
-          label="Estado"
-          placeholder="Todos"
-        />
-      </DataTableToolbar>
+        showFilters={showFilters}
+        onShowFiltersChange={setShowFilters}
+      />
 
       {isError ? (
         <div
@@ -241,6 +286,9 @@ export default function UsersPage() {
         onSelectedRowsChange={setSelectedRows}
         sort={sort}
         onSortChange={handleSortChange}
+        showFilters={showFilters}
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
         striped
         hoverable
         stickyHeader

@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 
 import Checkbox from "../Checkbox";
+import Input from "../Input";
+import Select from "../Select";
 import Spinner from "../Spinner";
 import {
   Table,
@@ -19,12 +21,40 @@ export interface DataTableSort {
   direction: SortDirection;
 }
 
+export interface DataTableFilterOption {
+  value: string;
+  label: string;
+}
+
+export type DataTableFilterType =
+  | "text"
+  | "select"
+  | "date"
+  | "date-range"
+  | "number"
+  | "number-range";
+
+export interface DataTableRangeValue {
+  from: string;
+  to: string;
+}
+
+export type DataTableFilterValue = string | DataTableRangeValue;
+
+export type DataTableFilters = Record<string, DataTableFilterValue>;
+
 export interface DataTableColumn<T> {
   id: string;
   header: string;
   accessor?: keyof T;
   cell?: (row: T) => React.ReactNode;
+
   sortable?: boolean;
+
+  filterable?: boolean;
+  filterType?: DataTableFilterType;
+  filterOptions?: DataTableFilterOption[];
+
   align?: TableAlign;
   width?: string;
 }
@@ -45,6 +75,10 @@ export interface DataTableProps<T> {
 
   sort?: DataTableSort | null;
   onSortChange?: (sort: DataTableSort | null) => void;
+
+  showFilters?: boolean;
+  filters?: DataTableFilters;
+  onFiltersChange?: (filters: DataTableFilters) => void;
 
   striped?: boolean;
   hoverable?: boolean;
@@ -78,7 +112,8 @@ function getNextSort(
  * Tabla genérica reutilizable para cualquier feature.
  *
  * No contiene lógica de negocio ni depende de una API concreta.
- * La ordenación y selección pueden ser controladas desde el componente padre.
+ * La ordenación, selección y filtros pueden ser controlados
+ * desde el componente padre.
  */
 export function DataTable<T>({
   data,
@@ -92,6 +127,9 @@ export function DataTable<T>({
   onSelectedRowsChange,
   sort = null,
   onSortChange,
+  showFilters = false,
+  filters = {},
+  onFiltersChange,
   striped = false,
   hoverable = true,
   stickyHeader = false,
@@ -160,6 +198,57 @@ export function DataTable<T>({
     }
 
     onSortChange(getNextSort(sort, column.id));
+  }
+
+  function handleFilterChange(columnId: string, value: string) {
+    onFiltersChange?.({
+      ...filters,
+      [columnId]: value,
+    });
+  }
+
+  function renderFilter(column: DataTableColumn<T>): React.ReactNode {
+    if (!column.filterable) {
+      return null;
+    }
+
+    const filterValue = filters[column.id];
+    const value = typeof filterValue === "string" ? filterValue : "";
+
+    const filterType = column.filterType ?? "text";
+    const ariaLabel = `Filtrar ${column.header}`;
+
+    if (filterType === "select") {
+      return (
+        <Select
+          value={value}
+          onChange={(event) =>
+            handleFilterChange(column.id, event.target.value)
+          }
+          aria-label={ariaLabel}
+          className="w-full"
+        >
+          <option value="">Todos</option>
+
+          {column.filterOptions?.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+      );
+    }
+
+    return (
+      <Input
+        type={filterType === "number" ? "number" : "text"}
+        value={value}
+        onChange={(event) => handleFilterChange(column.id, event.target.value)}
+        placeholder="Filtrar..."
+        aria-label={ariaLabel}
+        className="w-full"
+      />
+    );
   }
 
   function renderCell(column: DataTableColumn<T>, row: T): React.ReactNode {
@@ -257,6 +346,23 @@ export function DataTable<T>({
               );
             })}
           </TableRow>
+
+          {showFilters ? (
+            <TableRow hoverable={false}>
+              {selectable ? <TableHead align="center" size="compact" /> : null}
+
+              {columns.map((column) => (
+                <TableHead
+                  key={column.id}
+                  align={column.align}
+                  style={{ width: column.width }}
+                  className="bg-background"
+                >
+                  {renderFilter(column)}
+                </TableHead>
+              ))}
+            </TableRow>
+          ) : null}
         </TableHeader>
 
         <TableBody>
