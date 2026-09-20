@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
-import { Clock, Factory, User } from "lucide-react";
+import { CheckCircle2, Clock, Factory, ShieldCheck } from "lucide-react";
 
 import {
   KanbanBoard,
@@ -8,7 +8,18 @@ import {
   KanbanColumn,
 } from "../../components/ui/kanban";
 
-import { Avatar, Badge, PageHeader, ProgressBar } from "../../components/ui";
+import {
+  Avatar,
+  Badge,
+  PageHeader,
+  ProgressBar,
+  Tabs,
+} from "../../components/ui";
+
+import type {
+  ProduccionOperacion,
+  ProduccionOperacionEstado,
+} from "./produccion.types";
 
 // ============================================================================
 // CONEXIÓN REAL — TEMPORALMENTE COMENTADA
@@ -18,395 +29,553 @@ import { Avatar, Badge, PageHeader, ProgressBar } from "../../components/ui";
 //
 // import { useProduccionOperaciones } from "./produccion.hooks";
 //
-// Y dentro de ProduccionPage:
+// Después podremos reemplazar:
+//
+// const [operations, setOperations] = ...
+//
+// por:
 //
 // const {
 //   data: operations = [],
 //   isLoading,
 // } = useProduccionOperaciones();
 //
-// Luego:
-//
-// ProduccionPage
-//      ↓
-// useProduccionOperaciones()
-//      ↓
-// produccionApi.list()
-//      ↓
-// createCrudOperations()
-//      ↓
-// api.get()
-//      ↓
-// Django REST Framework
-//
 // ============================================================================
-
-import type { ProduccionOperacionEstado } from "./produccion.types";
 
 /**
  * ============================================================================
- * COLUMNAS
+ * ÁREAS DE PRODUCCIÓN
  * ============================================================================
  *
- * Estas columnas corresponden a los estados reales de
- * ProduccionOperacion en el backend.
+ * Estas son las áreas que actualmente participan del flujo de producción
+ * definido por Viabilidad:
+ *
+ * Extrusión
+ * Flexografía
+ * Confección
+ *
+ * Refilado existe en el backend de Recursos/Calidad, pero todavía no forma
+ * parte de la ruta que genera automáticamente Producción.
+ */
+type ProduccionArea = "extrusion" | "flexografia" | "confeccion";
+
+type ProduccionTab = ProduccionArea;
+
+/**
+ * ============================================================================
+ * COLUMNAS DEL KANBAN
+ * ============================================================================
+ *
+ * Corresponden directamente al campo:
+ *
+ * ProduccionOperacion.estado
  */
 const PRODUCCION_COLUMNAS: Array<{
   id: ProduccionOperacionEstado;
   title: string;
-  badgeVariant: "primary" | "success" | "warning" | "info" | "destructive";
-  dotClass: string;
 }> = [
   {
     id: "pendiente",
     title: "Pendiente",
-    badgeVariant: "info",
-    dotClass: "bg-info",
   },
   {
     id: "en_proceso",
     title: "En proceso",
-    badgeVariant: "primary",
-    dotClass: "bg-primary",
   },
   {
     id: "completada",
     title: "Completada",
-    badgeVariant: "success",
-    dotClass: "bg-success",
   },
   {
     id: "cancelada",
     title: "Cancelada",
-    badgeVariant: "destructive",
-    dotClass: "bg-destructive",
   },
 ];
 
 /**
  * ============================================================================
- * MOCK
+ * MOCK — DATOS RESUELTOS DE PRESENTACIÓN
  * ============================================================================
  *
- * Los campos siguientes son exclusivamente para la demostración visual.
+ * El backend real separa información en varias entidades:
  *
- * En el backend actual NO forman parte directamente de
- * ProduccionOperacion:
+ * ProduccionOperacion
+ * ├── equipo
+ * ├── orden_ruta
+ * ├── ruta_operacion
+ * └── resultado_viabilidad
  *
- * - pedidoNumero
- * - maquinaNombre
- * - operador
- * - prioridad
- * - cantidad_planificada
- * - tiempoTranscurrido
- * - tiempoEstimado
+ * OrdenProduccion
+ * ├── numero
+ * ├── prioridad
+ * └── cantidad_planificada
  *
- * Estos campos desaparecerán cuando conectemos la información real.
+ * Equipo
+ * └── nombre
+ *
+ * ControlCalidad
+ * └── resultado del control final
+ *
+ * Para que el mock sea cómodo de utilizar, aquí mantenemos una representación
+ * enriquecida de esas relaciones.
+ *
+ * Estos campos NO significan que existan directamente en el serializer de
+ * ProduccionOperacion.
  */
-type ProduccionOperacionMock = {
-  id: number;
-
-  orden_ruta: number;
-  ruta_operacion: number;
-  resultado_viabilidad: number;
-  equipo: number;
-
-  numero_operacion: number;
-
-  fecha_inicio_planificada: string;
-  fecha_inicio_real: string | null;
-
-  fecha_fin_planificada: string;
-  fecha_fin_real: string | null;
-
-  estado: ProduccionOperacionEstado;
-
-  cantidad_producida: string;
-
-  observaciones: string;
-
-  created_at: string;
-  updated_at: string;
-
-  // --------------------------------------------------------------------------
-  // Datos visuales temporales
-  // --------------------------------------------------------------------------
-
-  pedidoNumero: string;
-  maquinaNombre: string;
-  operador: string;
-
-  prioridad: "baja" | "normal" | "alta" | "urgente";
-
-  cantidad_planificada: number;
-
-  tiempoTranscurrido: string;
-  tiempoEstimado: string;
+type ProduccionOperacionMock = ProduccionOperacion & {
+  /**
+   * Área derivada de la ruta/proceso.
+   */
+  area: ProduccionArea;
 
   /**
-   * Posición utilizada únicamente para la prueba local del Kanban.
+   * OrdenProduccion.numero
+   */
+  ordenProduccionNumero: string;
+
+  /**
+   * Equipo.nombre
+   */
+  maquinaNombre: string;
+
+  /**
+   * OrdenProduccion.prioridad
+   */
+  prioridad: "baja" | "normal" | "alta" | "urgente";
+
+  /**
+   * OrdenProduccion.cantidad_planificada
+   */
+  cantidadPlanificada: number;
+
+  /**
+   * RutaOperacion.tiempo_estandar_min
+   */
+  tiempoEstandarMin: number;
+
+  /**
+   * Dato derivado de ControlCalidad.
+   *
+   * null = todavía no aplica/no se ha realizado.
+   */
+  calidadFinalAprobada: boolean | null;
+
+  /**
+   * Posición local utilizada exclusivamente por el Kanban mock.
    */
   order: number;
 };
 
+/**
+ * ============================================================================
+ * OPERACIONES MOCK
+ * ============================================================================
+ *
+ * Las operaciones ahora representan rutas reales.
+ *
+ * OP-1001
+ * ├── Op 1 → Extrusión
+ * ├── Op 2 → Flexografía
+ * └── Op 3 → Confección
+ *
+ * OP-1002
+ * ├── Op 1 → Extrusión
+ * └── Op 2 → Confección
+ *
+ * OP-1003
+ * └── Op 1 → Extrusión
+ *
+ * OP-1004
+ * ├── Op 1 → Extrusión
+ * └── Op 2 → Flexografía
+ */
 const MOCK_OPERACIONES: ProduccionOperacionMock[] = [
+  // --------------------------------------------------------------------------
+  // OP-1001 — Extrusión completada
+  // --------------------------------------------------------------------------
   {
     id: 1,
-    orden_ruta: 101,
-    ruta_operacion: 1,
+
+    orden_ruta: 500,
+    ruta_operacion: 101,
     resultado_viabilidad: 201,
     equipo: 1,
+
     numero_operacion: 1,
-
-    fecha_inicio_planificada: "2026-09-20T08:00:00",
-    fecha_inicio_real: null,
-
-    fecha_fin_planificada: "2026-09-20T12:00:00",
-    fecha_fin_real: null,
-
-    estado: "pendiente",
-
-    cantidad_producida: "125",
-
-    observaciones: "",
-
-    created_at: "2026-09-19T10:00:00",
-    updated_at: "2026-09-19T10:00:00",
-
-    pedidoNumero: "OP-1001",
-    maquinaNombre: "Extrusora A",
-    operador: "Juan Pérez",
-    prioridad: "alta",
-    cantidad_planificada: 500,
-    tiempoTranscurrido: "1h",
-    tiempoEstimado: "4h",
-    order: 0,
-  },
-
-  {
-    id: 2,
-    orden_ruta: 102,
-    ruta_operacion: 1,
-    resultado_viabilidad: 202,
-    equipo: 2,
-    numero_operacion: 1,
-
-    fecha_inicio_planificada: "2026-09-20T07:30:00",
-    fecha_inicio_real: null,
-
-    fecha_fin_planificada: "2026-09-20T11:30:00",
-    fecha_fin_real: null,
-
-    estado: "pendiente",
-
-    cantidad_producida: "240",
-
-    observaciones: "",
-
-    created_at: "2026-09-19T10:10:00",
-    updated_at: "2026-09-19T10:10:00",
-
-    pedidoNumero: "OP-1002",
-    maquinaNombre: "Extrusora B",
-    operador: "María López",
-    prioridad: "normal",
-    cantidad_planificada: 600,
-    tiempoTranscurrido: "1h 30m",
-    tiempoEstimado: "4h",
-    order: 1,
-  },
-
-  {
-    id: 3,
-    orden_ruta: 103,
-    ruta_operacion: 2,
-    resultado_viabilidad: 203,
-    equipo: 3,
-    numero_operacion: 2,
 
     fecha_inicio_planificada: "2026-09-20T08:00:00",
     fecha_inicio_real: "2026-09-20T08:05:00",
 
-    fecha_fin_planificada: "2026-09-20T14:00:00",
+    fecha_fin_planificada: "2026-09-20T12:00:00",
+    fecha_fin_real: "2026-09-20T11:50:00",
+
+    estado: "completada",
+
+    cantidad_producida: "500",
+
+    observaciones: "Extrusión completada correctamente.",
+
+    created_at: "2026-09-19T10:00:00",
+    updated_at: "2026-09-20T11:50:00",
+
+    area: "extrusion",
+    ordenProduccionNumero: "OP-1001",
+    maquinaNombre: "Extrusora A",
+    prioridad: "alta",
+    cantidadPlanificada: 500,
+    tiempoEstandarMin: 240,
+    calidadFinalAprobada: true,
+
+    order: 0,
+  },
+
+  // --------------------------------------------------------------------------
+  // OP-1001 — Flexografía en proceso
+  // --------------------------------------------------------------------------
+  {
+    id: 2,
+
+    orden_ruta: 500,
+    ruta_operacion: 102,
+    resultado_viabilidad: 202,
+    equipo: 3,
+
+    numero_operacion: 2,
+
+    fecha_inicio_planificada: "2026-09-20T12:00:00",
+    fecha_inicio_real: "2026-09-20T12:10:00",
+
+    fecha_fin_planificada: "2026-09-20T18:00:00",
     fecha_fin_real: null,
 
     estado: "en_proceso",
 
     cantidad_producida: "325",
 
-    observaciones: "",
+    observaciones: "Producción de impresión en curso.",
 
-    created_at: "2026-09-19T10:20:00",
-    updated_at: "2026-09-20T10:00:00",
+    created_at: "2026-09-19T10:10:00",
+    updated_at: "2026-09-20T15:00:00",
 
-    pedidoNumero: "OP-1003",
+    area: "flexografia",
+    ordenProduccionNumero: "OP-1001",
     maquinaNombre: "Flexográfica A",
-    operador: "Pedro Gómez",
-    prioridad: "urgente",
-    cantidad_planificada: 500,
-    tiempoTranscurrido: "2h 15m",
-    tiempoEstimado: "6h",
+    prioridad: "alta",
+    cantidadPlanificada: 500,
+    tiempoEstandarMin: 360,
+    calidadFinalAprobada: null,
+
     order: 0,
   },
 
+  // --------------------------------------------------------------------------
+  // OP-1001 — Confección pendiente
+  // --------------------------------------------------------------------------
+  {
+    id: 3,
+
+    orden_ruta: 500,
+    ruta_operacion: 103,
+    resultado_viabilidad: 203,
+    equipo: 5,
+
+    numero_operacion: 3,
+
+    fecha_inicio_planificada: "2026-09-20T18:00:00",
+    fecha_inicio_real: null,
+
+    fecha_fin_planificada: "2026-09-20T23:00:00",
+    fecha_fin_real: null,
+
+    estado: "pendiente",
+
+    cantidad_producida: "0",
+
+    observaciones: "",
+
+    created_at: "2026-09-19T10:20:00",
+    updated_at: "2026-09-19T10:20:00",
+
+    area: "confeccion",
+    ordenProduccionNumero: "OP-1001",
+    maquinaNombre: "Confeccionadora A",
+    prioridad: "alta",
+    cantidadPlanificada: 500,
+    tiempoEstandarMin: 300,
+    calidadFinalAprobada: null,
+
+    order: 0,
+  },
+
+  // --------------------------------------------------------------------------
+  // OP-1002 — Extrusión completada
+  // --------------------------------------------------------------------------
   {
     id: 4,
-    orden_ruta: 104,
-    ruta_operacion: 2,
+
+    orden_ruta: 501,
+    ruta_operacion: 104,
     resultado_viabilidad: 204,
-    equipo: 4,
+    equipo: 2,
+
+    numero_operacion: 1,
+
+    fecha_inicio_planificada: "2026-09-20T07:30:00",
+    fecha_inicio_real: "2026-09-20T07:35:00",
+
+    fecha_fin_planificada: "2026-09-20T11:30:00",
+    fecha_fin_real: "2026-09-20T11:20:00",
+
+    estado: "completada",
+
+    cantidad_producida: "600",
+
+    observaciones: "Extrusión completada.",
+
+    created_at: "2026-09-19T10:30:00",
+    updated_at: "2026-09-20T11:20:00",
+
+    area: "extrusion",
+    ordenProduccionNumero: "OP-1002",
+    maquinaNombre: "Extrusora B",
+    prioridad: "normal",
+    cantidadPlanificada: 600,
+    tiempoEstandarMin: 240,
+    calidadFinalAprobada: true,
+
+    order: 1,
+  },
+
+  // --------------------------------------------------------------------------
+  // OP-1002 — Confección en proceso
+  // --------------------------------------------------------------------------
+  {
+    id: 5,
+
+    orden_ruta: 501,
+    ruta_operacion: 105,
+    resultado_viabilidad: 205,
+    equipo: 6,
+
     numero_operacion: 2,
 
-    fecha_inicio_planificada: "2026-09-20T09:00:00",
-    fecha_inicio_real: "2026-09-20T09:02:00",
+    fecha_inicio_planificada: "2026-09-20T12:00:00",
+    fecha_inicio_real: "2026-09-20T12:05:00",
 
-    fecha_fin_planificada: "2026-09-20T15:00:00",
+    fecha_fin_planificada: "2026-09-20T18:00:00",
     fecha_fin_real: null,
 
     estado: "en_proceso",
 
     cantidad_producida: "280",
 
-    observaciones: "",
+    observaciones: "Confección en curso.",
 
-    created_at: "2026-09-19T10:30:00",
-    updated_at: "2026-09-20T10:15:00",
+    created_at: "2026-09-19T10:40:00",
+    updated_at: "2026-09-20T15:10:00",
 
-    pedidoNumero: "OP-1004",
-    maquinaNombre: "Flexográfica B",
-    operador: "Ana Torres",
-    prioridad: "alta",
-    cantidad_planificada: 400,
-    tiempoTranscurrido: "2h",
-    tiempoEstimado: "6h",
+    area: "confeccion",
+    ordenProduccionNumero: "OP-1002",
+    maquinaNombre: "Confeccionadora B",
+    prioridad: "normal",
+    cantidadPlanificada: 600,
+    tiempoEstandarMin: 360,
+    calidadFinalAprobada: null,
+
     order: 1,
   },
 
-  {
-    id: 5,
-    orden_ruta: 105,
-    ruta_operacion: 3,
-    resultado_viabilidad: 205,
-    equipo: 5,
-    numero_operacion: 3,
-
-    fecha_inicio_planificada: "2026-09-19T08:00:00",
-    fecha_inicio_real: "2026-09-19T08:03:00",
-
-    fecha_fin_planificada: "2026-09-19T14:00:00",
-    fecha_fin_real: "2026-09-19T13:35:00",
-
-    estado: "completada",
-
-    cantidad_producida: "500",
-
-    observaciones: "Producción completada correctamente.",
-
-    created_at: "2026-09-18T10:00:00",
-    updated_at: "2026-09-19T13:35:00",
-
-    pedidoNumero: "OP-1005",
-    maquinaNombre: "Confeccionadora A",
-    operador: "Luis Pérez",
-    prioridad: "normal",
-    cantidad_planificada: 500,
-    tiempoTranscurrido: "5h 35m",
-    tiempoEstimado: "6h",
-    order: 0,
-  },
-
+  // --------------------------------------------------------------------------
+  // OP-1003 — Extrusión pendiente
+  // --------------------------------------------------------------------------
   {
     id: 6,
-    orden_ruta: 106,
-    ruta_operacion: 3,
+
+    orden_ruta: 502,
+    ruta_operacion: 106,
     resultado_viabilidad: 206,
-    equipo: 6,
-    numero_operacion: 3,
+    equipo: 1,
 
-    fecha_inicio_planificada: "2026-09-19T07:00:00",
-    fecha_inicio_real: "2026-09-19T07:10:00",
+    numero_operacion: 1,
 
-    fecha_fin_planificada: "2026-09-19T13:00:00",
-    fecha_fin_real: "2026-09-19T12:20:00",
+    fecha_inicio_planificada: "2026-09-20T16:00:00",
+    fecha_inicio_real: null,
 
-    estado: "completada",
+    fecha_fin_planificada: "2026-09-20T20:00:00",
+    fecha_fin_real: null,
 
-    cantidad_producida: "800",
+    estado: "pendiente",
+
+    cantidad_producida: "0",
 
     observaciones: "",
 
-    created_at: "2026-09-18T10:10:00",
-    updated_at: "2026-09-19T12:20:00",
+    created_at: "2026-09-19T11:00:00",
+    updated_at: "2026-09-19T11:00:00",
 
-    pedidoNumero: "OP-1006",
-    maquinaNombre: "Confeccionadora B",
-    operador: "Carlos Ruiz",
-    prioridad: "alta",
-    cantidad_planificada: 800,
-    tiempoTranscurrido: "5h 10m",
-    tiempoEstimado: "6h",
-    order: 1,
+    area: "extrusion",
+    ordenProduccionNumero: "OP-1003",
+    maquinaNombre: "Extrusora A",
+    prioridad: "urgente",
+    cantidadPlanificada: 400,
+    tiempoEstandarMin: 240,
+    calidadFinalAprobada: null,
+
+    order: 2,
   },
 
+  // --------------------------------------------------------------------------
+  // OP-1003 — Operación cancelada
+  // --------------------------------------------------------------------------
   {
     id: 7,
-    orden_ruta: 107,
-    ruta_operacion: 4,
+
+    orden_ruta: 503,
+    ruta_operacion: 107,
     resultado_viabilidad: 207,
-    equipo: 7,
-    numero_operacion: 4,
+    equipo: 2,
 
-    fecha_inicio_planificada: "2026-09-18T08:00:00",
-    fecha_inicio_real: "2026-09-18T08:10:00",
+    numero_operacion: 1,
 
-    fecha_fin_planificada: "2026-09-18T10:00:00",
-    fecha_fin_real: "2026-09-18T09:00:00",
+    fecha_inicio_planificada: "2026-09-19T08:00:00",
+    fecha_inicio_real: null,
+
+    fecha_fin_planificada: "2026-09-19T12:00:00",
+    fecha_fin_real: null,
 
     estado: "cancelada",
 
-    cantidad_producida: "100",
+    cantidad_producida: "0",
 
-    observaciones: "Orden cancelada por cambio de especificación.",
+    observaciones: "Operación cancelada por cambio de especificación.",
 
-    created_at: "2026-09-17T09:00:00",
-    updated_at: "2026-09-18T09:00:00",
+    created_at: "2026-09-18T09:00:00",
+    updated_at: "2026-09-19T09:00:00",
 
-    pedidoNumero: "OP-1007",
-    maquinaNombre: "Equipo C",
-    operador: "Sofía Mendoza",
+    area: "extrusion",
+    ordenProduccionNumero: "OP-1004",
+    maquinaNombre: "Extrusora B",
     prioridad: "baja",
-    cantidad_planificada: 300,
-    tiempoTranscurrido: "1h",
-    tiempoEstimado: "2h",
+    cantidadPlanificada: 300,
+    tiempoEstandarMin: 240,
+    calidadFinalAprobada: null,
+
     order: 0,
+  },
+
+  // --------------------------------------------------------------------------
+  // OP-1004 — Extrusión completada, pero calidad final NO aprobada
+  // --------------------------------------------------------------------------
+  {
+    id: 8,
+
+    orden_ruta: 504,
+    ruta_operacion: 108,
+    resultado_viabilidad: 208,
+    equipo: 1,
+
+    numero_operacion: 1,
+
+    fecha_inicio_planificada: "2026-09-20T06:00:00",
+    fecha_inicio_real: "2026-09-20T06:05:00",
+
+    fecha_fin_planificada: "2026-09-20T10:00:00",
+    fecha_fin_real: "2026-09-20T09:50:00",
+
+    estado: "completada",
+
+    cantidad_producida: "450",
+
+    observaciones:
+      "Operación completada. Pendiente de liberación por control de calidad.",
+
+    created_at: "2026-09-19T11:10:00",
+    updated_at: "2026-09-20T09:50:00",
+
+    area: "extrusion",
+    ordenProduccionNumero: "OP-1005",
+    maquinaNombre: "Extrusora A",
+    prioridad: "alta",
+    cantidadPlanificada: 450,
+    tiempoEstandarMin: 240,
+    calidadFinalAprobada: false,
+
+    order: 3,
+  },
+
+  // --------------------------------------------------------------------------
+  // OP-1004 — Flexografía bloqueada por calidad
+  // --------------------------------------------------------------------------
+  {
+    id: 9,
+
+    orden_ruta: 504,
+    ruta_operacion: 109,
+    resultado_viabilidad: 209,
+    equipo: 4,
+
+    numero_operacion: 2,
+
+    fecha_inicio_planificada: "2026-09-20T10:00:00",
+    fecha_inicio_real: null,
+
+    fecha_fin_planificada: "2026-09-20T16:00:00",
+    fecha_fin_real: null,
+
+    estado: "pendiente",
+
+    cantidad_producida: "0",
+
+    observaciones: "Esperando aprobación del control de calidad final.",
+
+    created_at: "2026-09-19T11:20:00",
+    updated_at: "2026-09-20T09:50:00",
+
+    area: "flexografia",
+    ordenProduccionNumero: "OP-1005",
+    maquinaNombre: "Flexográfica B",
+    prioridad: "alta",
+    cantidadPlanificada: 450,
+    tiempoEstandarMin: 360,
+    calidadFinalAprobada: null,
+
+    order: 1,
   },
 ];
 
 /**
  * ============================================================================
- * TRANSICIONES PERMITIDAS EN EL MOCK
+ * TRANSICIONES DEL MOCK
  * ============================================================================
  *
- * Se basan en el flujo que actualmente implementa el backend:
+ * Flujo controlado por los servicios reales:
  *
- * pendiente -> en_proceso
- * en_proceso -> completada
+ * pendiente
+ *   ├── en_proceso
+ *   └── cancelada
  *
- * Cancelada no tiene actualmente una acción específica en
- * ProduccionOperacionViewSet.
+ * en_proceso
+ *   ├── completada
+ *   └── cancelada
+ *
+ * completada
+ *   └── sin transición
+ *
+ * cancelada
+ *   └── sin transición
  */
 const ALLOWED_TRANSITIONS: Record<
   ProduccionOperacionEstado,
   ProduccionOperacionEstado[]
 > = {
-  pendiente: ["en_proceso"],
-  en_proceso: ["completada"],
+  pendiente: ["en_proceso", "cancelada"],
+  en_proceso: ["completada", "cancelada"],
   completada: [],
   cancelada: [],
 };
 
 /**
- * Comprueba si una transición está permitida.
+ * Comprueba si existe la transición de estado.
  */
 function isAllowedTransition(
   from: ProduccionOperacionEstado,
@@ -416,29 +585,42 @@ function isAllowedTransition(
 }
 
 /**
- * Devuelve la configuración visual correspondiente a una prioridad.
+ * ============================================================================
+ * FORMATEO DE ETIQUETAS DE ÁREA
+ * ============================================================================
+ */
+function getAreaLabel(area: ProduccionArea): string {
+  const labels: Record<ProduccionArea, string> = {
+    extrusion: "Extrusión",
+    flexografia: "Flexografía",
+    confeccion: "Confección",
+  };
+
+  return labels[area];
+}
+
+/**
+ * ============================================================================
+ * FORMATEO DE PRIORIDADES
+ * ============================================================================
  */
 function getPriorityConfig(priority: ProduccionOperacionMock["prioridad"]) {
   const config = {
     baja: {
       label: "Baja",
       variant: "secondary" as const,
-      dotClass: "bg-muted-foreground",
     },
     normal: {
       label: "Normal",
       variant: "info" as const,
-      dotClass: "bg-info",
     },
     alta: {
       label: "Alta",
       variant: "warning" as const,
-      dotClass: "bg-warning",
     },
     urgente: {
       label: "Urgente",
       variant: "destructive" as const,
-      dotClass: "bg-destructive",
     },
   };
 
@@ -446,7 +628,9 @@ function getPriorityConfig(priority: ProduccionOperacionMock["prioridad"]) {
 }
 
 /**
- * Formatea fechas para la interfaz.
+ * ============================================================================
+ * FORMATEO DE FECHAS
+ * ============================================================================
  */
 function formatDateTime(value: string | null): string {
   if (!value) {
@@ -466,7 +650,9 @@ function formatDateTime(value: string | null): string {
 }
 
 /**
- * Formatea cantidades.
+ * ============================================================================
+ * FORMATEO DE CANTIDADES
+ * ============================================================================
  */
 function formatQuantity(value: string | number): string {
   const numericValue = Number(value);
@@ -481,7 +667,9 @@ function formatQuantity(value: string | number): string {
 }
 
 /**
- * Calcula el porcentaje producido.
+ * ============================================================================
+ * PROGRESO
+ * ============================================================================
  */
 function calculateProgress(produced: string, planned: number): number {
   const producedValue = Number(produced);
@@ -502,40 +690,198 @@ function calculateProgress(produced: string, planned: number): number {
 
 /**
  * ============================================================================
+ * DURACIÓN
+ * ============================================================================
+ *
+ * Para una operación:
+ *
+ * pendiente:
+ *   No existe tiempo transcurrido.
+ *
+ * en_proceso:
+ *   ahora - fecha_inicio_real
+ *
+ * completada:
+ *   fecha_fin_real - fecha_inicio_real
+ *
+ * cancelada:
+ *   Si tuvo inicio real, calculamos hasta fecha_fin_real si existe.
+ */
+function calculateElapsedMinutes(
+  operation: ProduccionOperacionMock,
+): number | null {
+  if (!operation.fecha_inicio_real) {
+    return null;
+  }
+
+  const start = new Date(operation.fecha_inicio_real);
+
+  if (Number.isNaN(start.getTime())) {
+    return null;
+  }
+
+  const end = operation.fecha_fin_real
+    ? new Date(operation.fecha_fin_real)
+    : new Date();
+
+  if (Number.isNaN(end.getTime())) {
+    return null;
+  }
+
+  const elapsed = Math.max(
+    0,
+    Math.round((end.getTime() - start.getTime()) / 60_000),
+  );
+
+  return elapsed;
+}
+
+/**
+ * Formatea minutos como:
+ *
+ * 45m
+ * 2h
+ * 2h 30m
+ */
+function formatDuration(minutes: number | null): string {
+  if (minutes === null) {
+    return "Sin iniciar";
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours === 0) {
+    return `${remainingMinutes}m`;
+  }
+
+  if (remainingMinutes === 0) {
+    return `${hours}h`;
+  }
+
+  return `${hours}h ${remainingMinutes}m`;
+}
+
+/**
+ * ============================================================================
+ * REGLA DE SECUENCIA
+ * ============================================================================
+ *
+ * El servicio real iniciar_operacion() exige:
+ *
+ * - Si numero_operacion === 1:
+ *     puede iniciar directamente.
+ *
+ * - Si numero_operacion > 1:
+ *     debe existir la operación anterior de la misma OrdenRuta.
+ *
+ *     Además:
+ *     - operación anterior completada
+ *     - control de calidad FINAL aprobado
+ *
+ * Esta función reproduce esa regla en el mock.
+ */
+function canStartOperation(
+  operation: ProduccionOperacionMock,
+  operations: ProduccionOperacionMock[],
+): boolean {
+  if (operation.numero_operacion === 1) {
+    return true;
+  }
+
+  const previousOperation = operations.find(
+    (candidate) =>
+      candidate.orden_ruta === operation.orden_ruta &&
+      candidate.numero_operacion === operation.numero_operacion - 1,
+  );
+
+  if (!previousOperation) {
+    return false;
+  }
+
+  return (
+    previousOperation.estado === "completada" &&
+    previousOperation.calidadFinalAprobada === true
+  );
+}
+
+/**
+ * Devuelve el motivo por el que una operación pendiente todavía no puede
+ * iniciar.
+ */
+function getStartBlockMessage(
+  operation: ProduccionOperacionMock,
+  operations: ProduccionOperacionMock[],
+): string | null {
+  if (operation.estado !== "pendiente") {
+    return null;
+  }
+
+  if (operation.numero_operacion === 1) {
+    return null;
+  }
+
+  const previousOperation = operations.find(
+    (candidate) =>
+      candidate.orden_ruta === operation.orden_ruta &&
+      candidate.numero_operacion === operation.numero_operacion - 1,
+  );
+
+  if (!previousOperation) {
+    return "Operación anterior no encontrada.";
+  }
+
+  if (previousOperation.estado !== "completada") {
+    return "Esperando finalización de la operación anterior.";
+  }
+
+  if (previousOperation.calidadFinalAprobada !== true) {
+    return "Esperando aprobación de calidad final.";
+  }
+
+  return null;
+}
+
+/**
+ * ============================================================================
  * TARJETA DE PRODUCCIÓN
  * ============================================================================
  */
 function ProduccionCardContent({
   operation,
+  allOperations,
 }: {
   operation: ProduccionOperacionMock;
+  allOperations: ProduccionOperacionMock[];
 }) {
   const priority = getPriorityConfig(operation.prioridad);
 
   const progress = calculateProgress(
     operation.cantidad_producida,
-    operation.cantidad_planificada,
+    operation.cantidadPlanificada,
   );
+
+  const elapsedMinutes = calculateElapsedMinutes(operation);
+
+  const startBlockMessage = getStartBlockMessage(operation, allOperations);
+
+  const mostrarBloqueo =
+    operation.estado === "pendiente" && startBlockMessage !== null;
 
   return (
     <div className="space-y-3">
-      {/* Cabecera */}
+      {/* ------------------------------------------------------------------- */}
+      {/* CABECERA                                                            */}
+      {/* ------------------------------------------------------------------- */}
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <span
-            aria-hidden="true"
-            className={`size-2.5 shrink-0 rounded-full ${priority.dotClass}`}
-          />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold text-foreground">
+            {operation.ordenProduccionNumero}
+          </p>
 
-          <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-foreground">
-              {operation.pedidoNumero}
-            </p>
-
-            <p className="text-xs text-muted-foreground">
-              Operación #{operation.numero_operacion}
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Operación #{operation.numero_operacion}
+          </p>
         </div>
 
         <Badge variant={priority.variant} className="shrink-0">
@@ -543,49 +889,108 @@ function ProduccionCardContent({
         </Badge>
       </div>
 
-      {/* Máquina */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Factory className="size-3.5 shrink-0" />
+      {/* ------------------------------------------------------------------- */}
+      {/* ÁREA / MÁQUINA                                                     */}
+      {/* ------------------------------------------------------------------- */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Factory className="size-3.5 shrink-0" />
 
-        <span className="truncate">{operation.maquinaNombre}</span>
+          <span className="truncate">{operation.maquinaNombre}</span>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Área:{" "}
+          <span className="text-foreground">
+            {getAreaLabel(operation.area)}
+          </span>
+        </p>
       </div>
 
-      {/* Progreso */}
-      <ProgressBar
-        value={Number(operation.cantidad_producida)}
-        max={operation.cantidad_planificada}
-        variant={progress === 100 ? "success" : "primary"}
-        showLabel
-      />
+      {/* ------------------------------------------------------------------- */}
+      {/* PROGRESO                                                            */}
+      {/* ------------------------------------------------------------------- */}
+      <div className="space-y-1.5">
+        <ProgressBar
+          value={Number(operation.cantidad_producida)}
+          max={operation.cantidadPlanificada}
+          variant={progress === 100 ? "success" : "primary"}
+          showLabel
+        />
 
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>
-          {formatQuantity(operation.cantidad_producida)} /{" "}
-          {formatQuantity(operation.cantidad_planificada)}
-        </span>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            {formatQuantity(operation.cantidad_producida)} /{" "}
+            {formatQuantity(operation.cantidadPlanificada)}
+          </span>
+        </div>
       </div>
 
-      {/* Tiempo */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Clock className="size-3 shrink-0" />
+      {/* ------------------------------------------------------------------- */}
+      {/* TIEMPO                                                              */}
+      {/* ------------------------------------------------------------------- */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="size-3 shrink-0" />
 
-        <span>
-          {operation.tiempoTranscurrido} / {operation.tiempoEstimado}
-        </span>
+          <span>{formatDuration(elapsedMinutes)}</span>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Tiempo estándar:{" "}
+          <span className="text-foreground">
+            {formatDuration(operation.tiempoEstandarMin)}
+          </span>
+        </p>
       </div>
 
-      {/* Operador */}
+      {/* ------------------------------------------------------------------- */}
+      {/* CALIDAD FINAL                                                      */}
+      {/* ------------------------------------------------------------------- */}
+      {operation.estado === "completada" &&
+        operation.calidadFinalAprobada !== null && (
+          <div className="border-t border-border pt-2">
+            <div className="flex items-center gap-2">
+              {operation.calidadFinalAprobada ? (
+                <>
+                  <ShieldCheck className="size-4 text-success" />
+
+                  <span className="text-xs font-medium text-success">
+                    Calidad final aprobada
+                  </span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="size-4 text-warning" />
+
+                  <span className="text-xs font-medium text-warning">
+                    Calidad final pendiente
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+      {/* ------------------------------------------------------------------- */}
+      {/* BLOQUEO DE SECUENCIA                                               */}
+      {/* ------------------------------------------------------------------- */}
+      {mostrarBloqueo && (
+        <div className="rounded-md bg-warning/10 px-2.5 py-2 text-xs text-warning">
+          {startBlockMessage}
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------- */}
+      {/* EQUIPO                                                              */}
+      {/* ------------------------------------------------------------------- */}
       <div className="flex items-center gap-2 border-t border-border pt-2">
-        <Avatar name={operation.operador} size="sm" />
+        <Avatar name={operation.maquinaNombre} size="sm" />
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <User className="size-3 shrink-0 text-muted-foreground" />
-
-            <span className="truncate text-xs font-medium text-foreground">
-              {operation.operador}
-            </span>
-          </div>
+          <p className="truncate text-xs font-medium text-foreground">
+            {operation.maquinaNombre}
+          </p>
 
           <p className="text-xs text-muted-foreground">
             Equipo #{operation.equipo}
@@ -593,14 +998,21 @@ function ProduccionCardContent({
         </div>
       </div>
 
-      {/* Fechas */}
+      {/* ------------------------------------------------------------------- */}
+      {/* FECHAS                                                              */}
+      {/* ------------------------------------------------------------------- */}
       <div className="space-y-1.5 border-t border-border pt-2 text-xs text-muted-foreground">
         <p>
-          Inicio:{" "}
+          Inicio planificado:{" "}
           <span className="text-foreground">
-            {formatDateTime(
-              operation.fecha_inicio_real ?? operation.fecha_inicio_planificada,
-            )}
+            {formatDateTime(operation.fecha_inicio_planificada)}
+          </span>
+        </p>
+
+        <p>
+          Inicio real:{" "}
+          <span className="text-foreground">
+            {formatDateTime(operation.fecha_inicio_real)}
           </span>
         </p>
 
@@ -610,6 +1022,15 @@ function ProduccionCardContent({
             {formatDateTime(operation.fecha_fin_planificada)}
           </span>
         </p>
+
+        {operation.fecha_fin_real && (
+          <p>
+            Fin real:{" "}
+            <span className="text-foreground">
+              {formatDateTime(operation.fecha_fin_real)}
+            </span>
+          </p>
+        )}
       </div>
     </div>
   );
@@ -617,47 +1038,67 @@ function ProduccionCardContent({
 
 /**
  * ============================================================================
- * REORDENAMIENTO LOCAL DEL MOCK
+ * NORMALIZACIÓN DEL ORDEN
  * ============================================================================
  *
- * Actualiza las posiciones después de un movimiento.
+ * El orden del Kanban es local y se mantiene separado por:
+ *
+ * área + estado
  */
 function normalizeOrder(
   operations: ProduccionOperacionMock[],
 ): ProduccionOperacionMock[] {
-  return PRODUCCION_COLUMNAS.flatMap((column) =>
-    operations
-      .filter((operation) => operation.estado === column.id)
-      .sort((a, b) => a.order - b.order)
-      .map((operation, index) => ({
-        ...operation,
-        order: index,
-      })),
-  );
+  const grouped = new Map<string, ProduccionOperacionMock[]>();
+
+  for (const operation of operations) {
+    const key = `${operation.area}:${operation.estado}`;
+
+    const group = grouped.get(key) ?? [];
+
+    group.push(operation);
+
+    grouped.set(key, group);
+  }
+
+  for (const group of grouped.values()) {
+    group.sort((a, b) => a.order - b.order);
+
+    group.forEach((operation, index) => {
+      operation.order = index;
+    });
+  }
+
+  return [...operations];
 }
 
 /**
- * Página principal de Producción.
+ * ============================================================================
+ * PÁGINA PRINCIPAL
+ * ============================================================================
  */
 export default function ProduccionPage() {
-  /**
-   * ==========================================================================
-   * ESTADO LOCAL DEL MOCK
-   * ==========================================================================
-   *
-   * Este estado existe únicamente para probar el comportamiento del Kanban.
-   *
-   * El backend no recibe ninguna petición.
-   */
-  const [operations, setOperations] =
-    useState<ProduccionOperacionMock[]>(MOCK_OPERACIONES);
+  const [tab, setTab] = useState<ProduccionTab>("extrusion");
 
   /**
-   * ==========================================================================
+   * Estado local del mock.
+   */
+  const [operations, setOperations] = useState<ProduccionOperacionMock[]>(() =>
+    normalizeOrder(MOCK_OPERACIONES),
+  );
+
+  /**
+   * --------------------------------------------------------------------------
+   * FILTRO POR ÁREA
+   * --------------------------------------------------------------------------
+   */
+  const filteredOperations = operations.filter(
+    (operation) => operation.area === tab,
+  );
+
+  /**
+   * --------------------------------------------------------------------------
    * DRAG & DROP
-   * ==========================================================================
-   *
-   * Aquí simulamos lo que posteriormente hará la API real.
+   * --------------------------------------------------------------------------
    */
   const handleDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -672,8 +1113,7 @@ export default function ProduccionPage() {
       destination.droppableId as ProduccionOperacionEstado;
 
     /**
-     * Si solamente cambió la posición dentro de la misma columna,
-     * también actualizamos el orden local.
+     * Si no cambió de posición ni de columna, no hacemos nada.
      */
     if (
       sourceStatus === destinationStatus &&
@@ -698,7 +1138,10 @@ export default function ProduccionPage() {
        */
       if (sourceStatus === destinationStatus) {
         const columnOperations = currentOperations
-          .filter((operation) => operation.estado === sourceStatus)
+          .filter(
+            (operation) =>
+              operation.area === tab && operation.estado === sourceStatus,
+          )
           .sort((a, b) => a.order - b.order);
 
         const movingIndex = columnOperations.findIndex(
@@ -737,12 +1180,10 @@ export default function ProduccionPage() {
        * ----------------------------------------------------------------------
        * CAMBIO DE COLUMNA
        * ----------------------------------------------------------------------
-       *
-       * En la prueba respetamos el flujo real del backend.
        */
       if (!isAllowedTransition(sourceStatus, destinationStatus)) {
-        console.debug("[Producción] Transición no permitida en el mock:", {
-          operationId: draggableId,
+        console.debug("[Producción] Transición no permitida:", {
+          operationId: movingOperation.id,
           from: sourceStatus,
           to: destinationStatus,
         });
@@ -751,60 +1192,152 @@ export default function ProduccionPage() {
       }
 
       /**
-       * Operaciones de la columna origen, sin la tarjeta movida.
+       * ----------------------------------------------------------------------
+       * REGLA DE INICIO
+       * ----------------------------------------------------------------------
+       *
+       * Al pasar:
+       *
+       * pendiente -> en_proceso
+       *
+       * verificamos la secuencia de operaciones.
+       */
+      if (
+        destinationStatus === "en_proceso" &&
+        !canStartOperation(movingOperation, currentOperations)
+      ) {
+        console.debug("[Producción] La operación todavía no puede iniciar:", {
+          operationId: movingOperation.id,
+          orden_ruta: movingOperation.orden_ruta,
+          numero_operacion: movingOperation.numero_operacion,
+        });
+
+        return currentOperations;
+      }
+
+      /**
+       * ----------------------------------------------------------------------
+       * OPERACIONES DEL ÁREA ACTIVA
+       * ----------------------------------------------------------------------
        */
       const sourceOperations = currentOperations
         .filter(
           (operation) =>
+            operation.area === tab &&
             operation.estado === sourceStatus &&
             operation.id !== movingOperation.id,
         )
         .sort((a, b) => a.order - b.order);
 
-      /**
-       * Operaciones de la columna destino.
-       */
       const destinationOperations = currentOperations
-        .filter((operation) => operation.estado === destinationStatus)
+        .filter(
+          (operation) =>
+            operation.area === tab && operation.estado === destinationStatus,
+        )
         .sort((a, b) => a.order - b.order);
 
       /**
-       * Insertamos la tarjeta en la posición elegida.
+       * ----------------------------------------------------------------------
+       * CAMBIOS QUE SIMULAN LOS SERVICIOS DEL BACKEND
+       * ----------------------------------------------------------------------
        */
-      destinationOperations.splice(destination.index, 0, {
-        ...movingOperation,
-        estado: destinationStatus,
-      });
+      const now = new Date().toISOString();
+
+      let updatedMovingOperation: ProduccionOperacionMock | null = null;
+
+      if (sourceStatus === "pendiente" && destinationStatus === "en_proceso") {
+        updatedMovingOperation = {
+          ...movingOperation,
+          estado: "en_proceso",
+          fecha_inicio_real: now,
+          updated_at: now,
+          order: destination.index,
+        };
+      } else if (
+        sourceStatus === "en_proceso" &&
+        destinationStatus === "completada"
+      ) {
+        updatedMovingOperation = {
+          ...movingOperation,
+          estado: "completada",
+          fecha_fin_real: now,
+          updated_at: now,
+          order: destination.index,
+        };
+      } else {
+        updatedMovingOperation = {
+          ...movingOperation,
+          estado: destinationStatus,
+          updated_at: now,
+          order: destination.index,
+        };
+      }
 
       /**
-       * Reconstruimos todas las operaciones respetando
-       * el orden visual de cada columna.
+       * Insertamos la operación en destino.
        */
-      const nextOperations = [
-        ...currentOperations.filter(
-          (operation) =>
-            operation.estado !== sourceStatus &&
-            operation.estado !== destinationStatus,
-        ),
-        ...sourceOperations.map((operation, index) => ({
-          ...operation,
-          order: index,
-        })),
-        ...destinationOperations.map((operation, index) => ({
-          ...operation,
-          order: index,
-        })),
-      ];
+      destinationOperations.splice(
+        destination.index,
+        0,
+        updatedMovingOperation,
+      );
+
+      /**
+       * ----------------------------------------------------------------------
+       * ACTUALIZAMOS EL ESTADO
+       * ----------------------------------------------------------------------
+       */
+      const nextOperations = currentOperations.map((operation) => {
+        /**
+         * Operación que se está moviendo.
+         */
+        if (operation.id === movingOperation.id) {
+          return updatedMovingOperation!;
+        }
+
+        /**
+         * Operaciones que permanecen en origen.
+         */
+        const sourceIndex = sourceOperations.findIndex(
+          (item) => item.id === operation.id,
+        );
+
+        if (sourceIndex !== -1) {
+          return {
+            ...operation,
+            order: sourceIndex,
+          };
+        }
+
+        /**
+         * Operaciones que están en destino.
+         */
+        const destinationIndex = destinationOperations.findIndex(
+          (item) => item.id === operation.id,
+        );
+
+        if (destinationIndex !== -1) {
+          return {
+            ...operation,
+            order: destinationIndex,
+          };
+        }
+
+        return operation;
+      });
 
       return normalizeOrder(nextOperations);
     });
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* -------------------------------------------------------------------- */}
+      {/* HEADER                                                               */}
+      {/* -------------------------------------------------------------------- */}
       <PageHeader
         title="Producción"
-        description="Tablero de producción en proceso"
+        description="Tablero de seguimiento de operaciones de producción"
         breadcrumb={[
           {
             label: "Producción",
@@ -812,9 +1345,34 @@ export default function ProduccionPage() {
         ]}
       />
 
+      {/* -------------------------------------------------------------------- */}
+      {/* TABS DE ÁREAS                                                        */}
+      {/* -------------------------------------------------------------------- */}
+      <Tabs
+        value={tab}
+        onChange={(value) => setTab(value as ProduccionTab)}
+        items={[
+          {
+            value: "extrusion",
+            label: "Extrusión",
+          },
+          {
+            value: "flexografia",
+            label: "Flexografía",
+          },
+          {
+            value: "confeccion",
+            label: "Confección",
+          },
+        ]}
+      />
+
+      {/* -------------------------------------------------------------------- */}
+      {/* KANBAN                                                               */}
+      {/* -------------------------------------------------------------------- */}
       <KanbanBoard onDragEnd={handleDragEnd}>
         {PRODUCCION_COLUMNAS.map((column) => {
-          const columnOperations = operations
+          const columnOperations = filteredOperations
             .filter((operation) => operation.estado === column.id)
             .sort((a, b) => a.order - b.order);
 
@@ -832,7 +1390,10 @@ export default function ProduccionPage() {
                   id={String(operation.id)}
                   index={index}
                 >
-                  <ProduccionCardContent operation={operation} />
+                  <ProduccionCardContent
+                    operation={operation}
+                    allOperations={operations}
+                  />
                 </KanbanCard>
               ))}
             </KanbanColumn>
