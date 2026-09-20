@@ -45,3 +45,6 @@ export const LoginPage = lazy(() => import("../../features/auth/LoginPage"));
 
 // admin
 export const AdminPage = lazy(() => import("../../features/admin/AdminPage"));
+
+// produccion
+export const ProduccionPage = lazy(() => import("../../features/produccion/ProduccionPage"));

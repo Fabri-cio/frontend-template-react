@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, PanelsTopLeft, User, Users } from "lucide-react";
+import { Home, LayoutDashboard, PanelsTopLeft, Pickaxe, User, Users } from "lucide-react";
 
 import type { SidebarItem } from "../../components/navigation";
 
@@ -62,5 +62,10 @@ export const navigationItems: NavigationItem[] = [
     label: "Admin",
     href: "/admin",
     icon: <Users className="size-5" />,
+  },{
+    id: "produccion",
+    label: "Producción",
+    href: "/produccion",
+    icon: <Pickaxe className="size-5" />,
   }
 ];

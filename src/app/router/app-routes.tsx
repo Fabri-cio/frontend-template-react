@@ -8,6 +8,7 @@ import {
   HomePage,
   LoginPage,
   NotFoundPage,
+  ProduccionPage,
   UiPlaygroundPage,
   UserCreatePage,
   UserEditPage,
@@ -78,6 +79,10 @@ export const appRoutes: AppRoute[] = [
       {
         path: "/admin",
         element: <AdminPage />,
+      },
+      {
+        path: "/produccion",
+        element: <ProduccionPage />,
       },
     ],
   },

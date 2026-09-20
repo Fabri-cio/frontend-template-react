@@ -92,3 +92,7 @@ export type { BreadcrumbItem, PageHeaderProps } from "./PageHeader";
 // LoadingState
 export { default as LoadingState } from "./LoadingState";
 export type { LoadingStateProps } from "./LoadingState";
+
+//
+export { ProgressBar } from "./ProgressBar";
+export type { ProgressBarProps, ProgressBarVariant } from "./ProgressBar";
