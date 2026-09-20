@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { X } from "lucide-react";
 
 import Checkbox from "../Checkbox";
 import Input from "../Input";
@@ -239,15 +240,42 @@ export function DataTable<T>({
       );
     }
 
+    const inputType = filterType === "number" ? "number" : "text";
+
     return (
-      <Input
-        type={filterType === "number" ? "number" : "text"}
-        value={value}
-        onChange={(event) => handleFilterChange(column.id, event.target.value)}
-        placeholder="Filtrar..."
-        aria-label={ariaLabel}
-        className="w-full"
-      />
+      <div className="relative w-full">
+        <Input
+          type={inputType}
+          value={value}
+          onChange={(event) =>
+            handleFilterChange(column.id, event.target.value)
+          }
+          placeholder="Filtrar..."
+          aria-label={ariaLabel}
+          className={value ? "pr-9" : ""}
+        />
+
+        {value ? (
+          <button
+            type="button"
+            onClick={() => handleFilterChange(column.id, "")}
+            aria-label={`Limpiar filtro de ${column.header}`}
+            title="Limpiar filtro"
+            className={[
+              "absolute right-2 top-1/2 -translate-y-1/2",
+              "inline-flex h-6 w-6 items-center justify-center",
+              "rounded-sm text-muted-foreground",
+              "transition-colors",
+              "hover:bg-muted hover:text-foreground",
+              "focus-visible:outline-none",
+              "focus-visible:ring-2",
+              "focus-visible:ring-primary/20",
+            ].join(" ")}
+          >
+            <X size={15} aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
     );
   }
 
