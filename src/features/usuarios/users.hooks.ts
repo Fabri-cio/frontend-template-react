@@ -16,7 +16,7 @@ import { usersApi } from "./users.api";
 /**
  * Obtiene la lista paginada de usuarios.
  */
-export function useUsers(params?: UserListParams) {
+export function useUsers(params?: UserListParams) { // ojo es con params 
   return useApiQuery<UserListResponse>({
     queryKey: ["users", "list", params],
     queryFn: () => usersApi.list(params),
