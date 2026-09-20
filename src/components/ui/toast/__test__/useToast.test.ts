@@ -1,8 +1,8 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { ToastProvider } from "./ToastProvider";
-import { useToast } from "./useToast";
+import { ToastProvider } from "../ToastProvider";
+import { useToast } from "../useToast";
 
 describe("useToast", () => {
   it("funciona dentro de ToastProvider", () => {

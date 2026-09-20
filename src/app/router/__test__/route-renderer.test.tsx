@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Navigate, Outlet } from "react-router-dom";
 
-import { RouteRenderer } from "./route-renderer";
-import type { AppRoute } from "./route.types";
+import { RouteRenderer } from "../route-renderer";
+import type { AppRoute } from "../route.types";
 
 describe("RouteRenderer", () => {
   it("renderiza una ruta normal", () => {
