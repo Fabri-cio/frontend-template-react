@@ -3,8 +3,8 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 
-import { AppError } from "../app/errors/app-error";
-import { useApiQuery } from "./use.api.query";
+import { AppError } from "../../app/errors/app-error";
+import { useApiQuery } from "../use.api.query";
 
 function createTestQueryClient() {
   return new QueryClient({

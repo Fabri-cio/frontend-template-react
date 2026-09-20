@@ -2,7 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 
-import { useUrlQueryParams } from "./use-url-query-params";
+import { useUrlQueryParams } from "../use-url-query-params";
 
 describe("useUrlQueryParams", () => {
   it("obtiene un parámetro de la URL", () => {

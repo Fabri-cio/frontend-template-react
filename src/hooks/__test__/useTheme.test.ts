@@ -1,8 +1,8 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { ThemeProvider } from "../theme/theme.provider";
-import { useTheme } from "./useTheme";
+import { ThemeProvider } from "../../theme/theme.provider";
+import { useTheme } from "../useTheme";
 
 describe("useTheme", () => {
   it("devuelve el contexto del tema dentro de ThemeProvider", () => {

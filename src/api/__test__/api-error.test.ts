@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { AppError } from "../app/errors/app-error";
+import { AppError } from "../../app/errors/app-error";
 
-import { normalizeApiError } from "./api-error";
+import { normalizeApiError } from "../api-error";
 
 describe("normalizeApiError", () => {
   it("normaliza un error 401 como UNAUTHORIZED", () => {

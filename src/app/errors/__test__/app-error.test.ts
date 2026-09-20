@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { AppError } from "./app-error";
+import { AppError } from "../app-error";
 
 describe("AppError", () => {
   it("representa un error de aplicación", () => {

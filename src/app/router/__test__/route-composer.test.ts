@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { composeRoutes } from "./route-composer";
-import type { AppRoute } from "./route.types";
+import { composeRoutes } from "../route-composer";
+import type { AppRoute } from "../route.types";
 
 describe("composeRoutes", () => {
   it("combina múltiples grupos de rutas", () => {

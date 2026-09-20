@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createCrudOperations } from "./api-crud";
-import type { ApiClient } from "./api.types";
+import { createCrudOperations } from "../api-crud";
+import type { ApiClient } from "../api.types";
 
 interface User {
   id: number;

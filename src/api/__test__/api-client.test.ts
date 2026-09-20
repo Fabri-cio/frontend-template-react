@@ -9,7 +9,7 @@ import {
   type InternalAxiosRequestConfig,
 } from "axios";
 
-import { createApiClient } from "./api-client";
+import { createApiClient } from "../api-client";
 
 /**
  * ============================================================================

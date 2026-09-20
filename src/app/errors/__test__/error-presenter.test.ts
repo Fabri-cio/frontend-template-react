@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { AppError } from "./app-error";
-import { getErrorPresentation } from "./error-presenter";
+import { AppError } from "../app-error";
+import { getErrorPresentation } from "../error-presenter";
 
 describe("getErrorPresentation", () => {
   it("presenta un error de conexión", () => {

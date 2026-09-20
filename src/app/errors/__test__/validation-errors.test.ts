@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { AppError } from "./app-error";
-import { getValidationFieldErrors } from "./validation-errors";
+import { AppError } from "../app-error";
+import { getValidationFieldErrors } from "../validation-errors";
 
 describe("getValidationFieldErrors", () => {
   it("convierte arrays de mensajes en mensajes por campo", () => {

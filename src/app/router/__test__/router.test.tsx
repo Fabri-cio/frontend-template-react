@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-import { AppRouter } from "./router";
+import { AppRouter } from "../router";
 
 vi.mock("./route-renderer", () => ({
   RouteRenderer: ({
