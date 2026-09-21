@@ -1,9 +1,9 @@
 import {
   Home,
-  LayoutDashboard,
-  PanelsTopLeft,
+  // LayoutDashboard,
+  // PanelsTopLeft,
   Pickaxe,
-  User,
+  // User,
   Users,
 } from "lucide-react";
 
