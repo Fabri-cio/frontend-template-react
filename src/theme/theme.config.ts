@@ -36,7 +36,7 @@ export const DEFAULT_THEME: Theme = "system";
  *
  * "neutral" corresponde al comportamiento original del template.
  */
-export const DEFAULT_COLOR_THEME: ColorTheme = "indigo";
+export const DEFAULT_COLOR_THEME: ColorTheme = "navy";
 
 /**
  * ----------------------------------------------------------------------------
