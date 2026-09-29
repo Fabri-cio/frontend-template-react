@@ -3,7 +3,7 @@
  * GLOBAL STYLES
  * ============================================================================
  *
- * Base agnóstica para la aplicación.
+ * Base agnóstica para toda la aplicación.
  *
  * Incluye:
  * - Tailwind CSS v4
@@ -11,11 +11,47 @@
  * - Integración de tokens con Tailwind
  * - Tema claro
  * - Tema oscuro
+ * - Sistema de color de identidad
+ * - Paletas corporativas extendidas
+ * - Sombras reutilizables
+ * - Tipografías
  * - Reset/base mínimo
- * - Tokens semánticos
+ * - Utilities globales
  *
- * No depende de ninguna librería UI.
+ * IMPORTANTE:
+ *
+ * Los tokens semánticos (`primary`, `success`, `warning`, etc.) forman
+ * parte del sistema general del ERP.
+ *
+ * Las paletas `brand`, `inplaz` y `danger` son paletas corporativas
+ * extendidas y permanecen independientes de `data-color`.
+ *
+ * Esto permite que módulos específicos, como Producción, mantengan
+ * una identidad visual corporativa estable sin romper el sistema
+ * general de temas de la aplicación.
  */
+
+/**
+ * ============================================================================
+ * EXTERNAL FONTS
+ * ============================================================================
+ *
+ * La aplicación anterior utilizaba Inter como tipografía principal.
+ *
+ * No hacemos que Inter sea la fuente global del ERP porque eso cambiaría
+ * visualmente otras funcionalidades que ya están construidas y probadas.
+ *
+ * En su lugar exponemos Inter mediante `font-inter`, para que las pantallas
+ * que necesiten reproducir esa identidad visual puedan utilizarla.
+ *
+ * Uso:
+ *
+ * <div className="font-inter">
+ *   ...
+ * </div>
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 @import "tailwindcss";
 
@@ -26,14 +62,33 @@
  *
  * Expone los tokens CSS como utilities de Tailwind.
  *
- * Ejemplo:
+ * Ejemplos:
  *
  * bg-background
  * text-foreground
  * bg-primary
  * text-primary-foreground
  * border-border
- * bg-success
+ *
+ * Paletas corporativas:
+ *
+ * bg-brand-100
+ * text-brand-700
+ * bg-inplaz-100
+ * text-inplaz-700
+ * bg-danger-50
+ * text-danger-700
+ *
+ * Sombras:
+ *
+ * shadow-card
+ * shadow-card-hover
+ *
+ * Tipografías:
+ *
+ * font-sans
+ * font-inter
+ * font-mono
  */
 
 @theme inline {
@@ -44,6 +99,7 @@
    */
 
   --font-sans: var(--font-sans);
+  --font-inter: var(--font-inter);
   --font-mono: var(--font-mono);
 
   /**
@@ -62,6 +118,10 @@
    * --------------------------------------------------------------------------
    * Semantic colors
    * --------------------------------------------------------------------------
+   *
+   * Estos colores forman parte del sistema general de la aplicación.
+   *
+   * Su valor puede cambiar dependiendo del tema seleccionado por el usuario.
    */
 
   --color-background: var(--background);
@@ -101,6 +161,116 @@
 
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+
+  /**
+   * --------------------------------------------------------------------------
+   * Corporate palette - Brand
+   * --------------------------------------------------------------------------
+   *
+   * Verde corporativo proveniente del sistema visual del proyecto anterior.
+   *
+   * Esta paleta es fija y no depende de `data-color`.
+   *
+   * Uso principal:
+   * - estados aprobados
+   * - producción completada
+   * - viabilidad aprobada
+   * - acciones corporativas positivas
+   */
+
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+
+  /**
+   * --------------------------------------------------------------------------
+   * Corporate palette - INPLAZ
+   * --------------------------------------------------------------------------
+   *
+   * Azul corporativo proveniente del sistema visual del proyecto anterior.
+   *
+   * Esta paleta es fija y no depende de `data-color`.
+   *
+   * Uso principal:
+   * - identidad visual de Producción
+   * - procesos en ejecución
+   * - máquinas/equipos
+   * - elementos estructurales del módulo
+   */
+
+  --color-inplaz-50: var(--inplaz-50);
+  --color-inplaz-100: var(--inplaz-100);
+  --color-inplaz-200: var(--inplaz-200);
+  --color-inplaz-300: var(--inplaz-300);
+  --color-inplaz-400: var(--inplaz-400);
+  --color-inplaz-500: var(--inplaz-500);
+  --color-inplaz-600: var(--inplaz-600);
+  --color-inplaz-700: var(--inplaz-700);
+  --color-inplaz-800: var(--inplaz-800);
+  --color-inplaz-900: var(--inplaz-900);
+  --color-inplaz-950: var(--inplaz-950);
+
+  /**
+   * --------------------------------------------------------------------------
+   * Corporate palette - Danger
+   * --------------------------------------------------------------------------
+   *
+   * Rojo semántico utilizado por el proyecto anterior.
+   *
+   * Uso principal:
+   * - rechazos
+   * - errores
+   * - procesos bloqueados
+   * - cantidades rechazadas
+   * - acciones destructivas específicas
+   */
+
+  --color-danger-50: var(--danger-50);
+  --color-danger-100: var(--danger-100);
+  --color-danger-200: var(--danger-200);
+  --color-danger-300: var(--danger-300);
+  --color-danger-400: var(--danger-400);
+  --color-danger-500: var(--danger-500);
+  --color-danger-600: var(--danger-600);
+  --color-danger-700: var(--danger-700);
+
+  /**
+   * --------------------------------------------------------------------------
+   * Extended shadows
+   * --------------------------------------------------------------------------
+   *
+   * Sombras provenientes del sistema visual anterior.
+   *
+   * Permiten reproducir:
+   *
+   * shadow-card
+   * hover:shadow-card-hover
+   */
+
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+
+  /**
+   * --------------------------------------------------------------------------
+   * Animations
+   * --------------------------------------------------------------------------
+   *
+   * Animaciones heredadas del sistema visual anterior.
+   *
+   * Se mantienen opcionales y no afectan componentes que no las utilizan.
+   */
+
+  --animate-fade-in: fade-in 0.15s ease-out;
+  --animate-slide-in: slide-in 0.2s ease-out;
+  --animate-slide-up: slide-up 0.2s ease-out;
 }
 
 /**
@@ -110,8 +280,8 @@
  *
  * Tokens internos del sistema.
  *
- * Las aplicaciones pueden sobrescribir estos valores para construir
- * su propia identidad visual sin modificar componentes.
+ * Las aplicaciones pueden sobrescribir estos valores sin modificar
+ * los componentes reutilizables.
  */
 
 /**
@@ -125,11 +295,21 @@
 
   /**
    * Typography
+   * --------------------------------------------------------------------------
    */
 
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
+
+  /**
+   * Inter se utiliza en módulos que necesitan reproducir la identidad
+   * visual del proyecto anterior.
+   */
+
+  --font-inter:
+    "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
 
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
@@ -137,6 +317,7 @@
 
   /**
    * Radius
+   * --------------------------------------------------------------------------
    */
 
   --radius-sm: 0.375rem;
@@ -147,6 +328,7 @@
 
   /**
    * Surface
+   * --------------------------------------------------------------------------
    */
 
   --background: #ffffff;
@@ -160,8 +342,7 @@
    *
    * Neutral por defecto.
    *
-   * Cada proyecto puede cambiarlo fácilmente por azul,
-   * violeta, verde, rojo, etc.
+   * Los temas `data-color` pueden modificar este valor.
    */
 
   --primary: #18181b;
@@ -169,6 +350,7 @@
 
   /**
    * Secondary
+   * --------------------------------------------------------------------------
    */
 
   --secondary: #f4f4f5;
@@ -176,6 +358,7 @@
 
   /**
    * Muted
+   * --------------------------------------------------------------------------
    */
 
   --muted: #f4f4f5;
@@ -183,6 +366,7 @@
 
   /**
    * Accent
+   * --------------------------------------------------------------------------
    *
    * Destinado a elementos interactivos secundarios,
    * estados hover o elementos destacados.
@@ -193,12 +377,14 @@
 
   /**
    * Borders
+   * --------------------------------------------------------------------------
    */
 
   --border: #e4e4e7;
 
   /**
    * Feedback
+   * --------------------------------------------------------------------------
    */
 
   --destructive: #dc2626;
@@ -212,6 +398,88 @@
 
   --info: #0284c7;
   --info-foreground: #ffffff;
+
+  /**
+   * --------------------------------------------------------------------------
+   * Corporate palette - Brand
+   * --------------------------------------------------------------------------
+   *
+   * Verde corporativo.
+   *
+   * Estos valores provienen del proyecto anterior y se mantienen explícitos
+   * para conservar la identidad visual de Producción.
+   */
+
+  --brand-50: #f0fdf4;
+  --brand-100: #dcfce7;
+  --brand-200: #bbf7d0;
+  --brand-300: #86efac;
+  --brand-400: #4ade80;
+  --brand-500: #22c55e;
+  --brand-600: #16a34a;
+  --brand-700: #15803d;
+  --brand-800: #166534;
+  --brand-900: #14532d;
+  --brand-950: #052e16;
+
+  /**
+   * --------------------------------------------------------------------------
+   * Corporate palette - INPLAZ
+   * --------------------------------------------------------------------------
+   *
+   * Azul corporativo.
+   */
+
+  --inplaz-50: #eff6ff;
+  --inplaz-100: #dbeafe;
+  --inplaz-200: #bfdbfe;
+  --inplaz-300: #93c5fd;
+  --inplaz-400: #60a5fa;
+  --inplaz-500: #3b82f6;
+  --inplaz-600: #2563eb;
+  --inplaz-700: #1d4ed8;
+  --inplaz-800: #1e40af;
+  --inplaz-900: #1e3a8a;
+  --inplaz-950: #172554;
+
+  /**
+   * --------------------------------------------------------------------------
+   * Corporate palette - Danger
+   * --------------------------------------------------------------------------
+   *
+   * Rojo corporativo/semántico.
+   *
+   * Se completa la escala para permitir el uso de:
+   *
+   * bg-danger-50
+   * bg-danger-100
+   * border-danger-200
+   * text-danger-700
+   * etc.
+   */
+
+  --danger-50: #fef2f2;
+  --danger-100: #fee2e2;
+  --danger-200: #fecaca;
+  --danger-300: #fca5a5;
+  --danger-400: #f87171;
+  --danger-500: #ef4444;
+  --danger-600: #dc2626;
+  --danger-700: #b91c1c;
+
+  /**
+   * --------------------------------------------------------------------------
+   * Extended shadows
+   * --------------------------------------------------------------------------
+   *
+   * Sombras recuperadas del sistema visual anterior.
+   */
+
+  --shadow-card:
+    0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
+
+  --shadow-card-hover:
+    0 4px 12px -2px rgb(0 0 0 / 0.1), 0 2px 6px -2px rgb(0 0 0 / 0.06);
 }
 
 /**
@@ -225,8 +493,16 @@
  *
  * <html class="dark" data-color="blue">
  *
- * .dark controla la apariencia general.
- * data-color controla el color principal.
+ * `.dark`
+ *   controla la apariencia general.
+ *
+ * `data-color`
+ *   controla únicamente el color principal del sistema semántico.
+ *
+ * IMPORTANTE:
+ *
+ * Las paletas `brand`, `inplaz` y `danger` NO son modificadas por
+ * `data-color`, ya que representan colores corporativos fijos.
  */
 
 /**
@@ -284,10 +560,10 @@
   --primary-foreground: #ffffff;
 }
 
-/** 
- * ---------------------------------------------------------------------------- 
- * Indigo 
- * ---------------------------------------------------------------------------- 
+/**
+ * ----------------------------------------------------------------------------
+ * Indigo
+ * ----------------------------------------------------------------------------
  */
 
 [data-color="indigo"] {
@@ -295,10 +571,10 @@
   --primary-foreground: #ffffff;
 }
 
-/** 
- * ---------------------------------------------------------------------------- 
- * Teal 
- * ---------------------------------------------------------------------------- 
+/**
+ * ----------------------------------------------------------------------------
+ * Teal
+ * ----------------------------------------------------------------------------
  */
 
 [data-color="teal"] {
@@ -306,10 +582,10 @@
   --primary-foreground: #ffffff;
 }
 
-/** 
- * ---------------------------------------------------------------------------- 
- * Cyan 
- * ---------------------------------------------------------------------------- 
+/**
+ * ----------------------------------------------------------------------------
+ * Cyan
+ * ----------------------------------------------------------------------------
  */
 
 [data-color="cyan"] {
@@ -317,10 +593,10 @@
   --primary-foreground: #ffffff;
 }
 
-/** 
- * ---------------------------------------------------------------------------- 
- * Slate 
- * ---------------------------------------------------------------------------- 
+/**
+ * ----------------------------------------------------------------------------
+ * Slate
+ * ----------------------------------------------------------------------------
  */
 
 [data-color="slate"] {
@@ -328,10 +604,10 @@
   --primary-foreground: #ffffff;
 }
 
-/** 
- * ---------------------------------------------------------------------------- 
- * Navy 
- * ---------------------------------------------------------------------------- 
+/**
+ * ----------------------------------------------------------------------------
+ * Navy
+ * ----------------------------------------------------------------------------
  */
 
 [data-color="navy"] {
@@ -340,9 +616,9 @@
 }
 
 /**
- * ----------------------------------------------------------------------------
- * Dark theme
- * ----------------------------------------------------------------------------
+ * ============================================================================
+ * DARK THEME
+ * ============================================================================
  *
  * Se activa agregando la clase `.dark`.
  *
@@ -356,6 +632,7 @@
 
   /**
    * Surface
+   * --------------------------------------------------------------------------
    */
 
   --background: #18181b;
@@ -366,6 +643,7 @@
 
   /**
    * Primary
+   * --------------------------------------------------------------------------
    */
 
   --primary: #fafafa;
@@ -373,6 +651,7 @@
 
   /**
    * Secondary
+   * --------------------------------------------------------------------------
    */
 
   --secondary: #27272a;
@@ -380,6 +659,7 @@
 
   /**
    * Muted
+   * --------------------------------------------------------------------------
    */
 
   --muted: #27272a;
@@ -387,6 +667,7 @@
 
   /**
    * Accent
+   * --------------------------------------------------------------------------
    */
 
   --accent: #27272a;
@@ -394,12 +675,14 @@
 
   /**
    * Borders
+   * --------------------------------------------------------------------------
    */
 
   --border: #3f3f46;
 
   /**
    * Feedback
+   * --------------------------------------------------------------------------
    */
 
   --destructive: #ef4444;
@@ -420,8 +703,16 @@
  * DARK COLOR SCHEMES
  * ============================================================================
  *
- * Estas variantes sobrescriben únicamente el color de identidad
+ * Estas variantes sobrescriben únicamente el color de identidad principal
  * después de aplicar los tokens del tema oscuro.
+ *
+ * Las paletas corporativas extendidas permanecen sin cambios.
+ */
+
+/**
+ * ----------------------------------------------------------------------------
+ * Dark Blue
+ * ----------------------------------------------------------------------------
  */
 
 .dark[data-color="blue"] {
@@ -429,49 +720,157 @@
   --primary-foreground: #ffffff;
 }
 
+/**
+ * ----------------------------------------------------------------------------
+ * Dark Violet
+ * ----------------------------------------------------------------------------
+ */
+
 .dark[data-color="violet"] {
   --primary: #8b5cf6;
   --primary-foreground: #ffffff;
 }
+
+/**
+ * ----------------------------------------------------------------------------
+ * Dark Green
+ * ----------------------------------------------------------------------------
+ */
 
 .dark[data-color="green"] {
   --primary: #22c55e;
   --primary-foreground: #18181b;
 }
 
+/**
+ * ----------------------------------------------------------------------------
+ * Dark Orange
+ * ----------------------------------------------------------------------------
+ */
+
 .dark[data-color="orange"] {
   --primary: #f97316;
   --primary-foreground: #18181b;
 }
+
+/**
+ * ----------------------------------------------------------------------------
+ * Dark Rose
+ * ----------------------------------------------------------------------------
+ */
 
 .dark[data-color="rose"] {
   --primary: #f43f5e;
   --primary-foreground: #ffffff;
 }
 
+/**
+ * ----------------------------------------------------------------------------
+ * Dark Indigo
+ * ----------------------------------------------------------------------------
+ */
+
 .dark[data-color="indigo"] {
   --primary: #6366f1;
   --primary-foreground: #ffffff;
 }
+
+/**
+ * ----------------------------------------------------------------------------
+ * Dark Teal
+ * ----------------------------------------------------------------------------
+ */
 
 .dark[data-color="teal"] {
   --primary: #14b8a6;
   --primary-foreground: #18181b;
 }
 
+/**
+ * ----------------------------------------------------------------------------
+ * Dark Cyan
+ * ----------------------------------------------------------------------------
+ */
+
 .dark[data-color="cyan"] {
   --primary: #22d3ee;
   --primary-foreground: #164e63;
 }
+
+/**
+ * ----------------------------------------------------------------------------
+ * Dark Slate
+ * ----------------------------------------------------------------------------
+ */
 
 .dark[data-color="slate"] {
   --primary: #94a3b8;
   --primary-foreground: #0f172a;
 }
 
+/**
+ * ----------------------------------------------------------------------------
+ * Dark Navy
+ * ----------------------------------------------------------------------------
+ */
+
 .dark[data-color="navy"] {
   --primary: #60a5fa;
   --primary-foreground: #0f172a;
+}
+
+/**
+ * ============================================================================
+ * KEYFRAMES
+ * ============================================================================
+ *
+ * Animaciones recuperadas del sistema visual anterior.
+ *
+ * Se mantienen globales y opcionales.
+ */
+
+/**
+ * Fade in
+ */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/**
+ * Slide in
+ */
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/**
+ * Slide up
+ */
+
+@keyframes slide-up {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /**
@@ -566,9 +965,11 @@
  */
 
 /**
- * Container genérico.
+ * ----------------------------------------------------------------------------
+ * Container
+ * ----------------------------------------------------------------------------
  *
- * Opcional.
+ * Contenedor genérico y responsive.
  *
  * Uso:
  *

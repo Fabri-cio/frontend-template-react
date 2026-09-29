@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import UserForm from "../../../usuarios/UserForm";
+import UserForm from "../../usuarios/UserForm";
 
 describe("UserForm", () => {
   it("renderiza todos los campos del formulario", () => {
