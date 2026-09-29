@@ -23,7 +23,7 @@ import {
 import { ROLE_LABELS } from "../../constants";
 // import { formatDate } from "../../utils"; ojo
 import type { Role } from "../../types";
-import UsersPage from "../usuarios/UsersPage";
+import UsersPage from "./usuarios/UsersPage";
 
 const PERMISSIONS_MATRIX = [
   {

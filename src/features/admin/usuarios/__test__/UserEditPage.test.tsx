@@ -2,10 +2,10 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import UserEditPage from "./UserEditPage";
+import UserEditPage from "../UserEditPage";
 
-import { AppError } from "../../app/errors/app-error";
-import { ToastProvider } from "../../components/ui";
+import { AppError } from "../../../../app/errors/app-error";
+import { ToastProvider } from "../../../../components/ui";
 
 const mockNavigate = vi.fn();
 const mockMutateAsync = vi.fn();

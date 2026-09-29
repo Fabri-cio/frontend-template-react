@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import UsersPage from "./UsersPage";
+import UsersPage from "../UsersPage";
 
 const mockUseUsers = vi.fn();
 

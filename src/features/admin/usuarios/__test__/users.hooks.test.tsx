@@ -3,15 +3,15 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { usersApi } from "./users.api";
+import { usersApi } from "../users.api";
 import {
   useCreateUser,
   useDeleteUser,
   useUpdateUser,
   useUser,
   useUsers,
-} from "./users.hooks";
-import { AppError } from "../../app/errors/app-error";
+} from "../users.hooks";
+import { AppError } from "../../../../app/errors/app-error";
 
 const mockUser = {
   id: 1,

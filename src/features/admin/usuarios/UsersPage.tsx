@@ -10,9 +10,9 @@ import {
   type DataTableColumn,
   type DataTableFilters,
   type DataTableSort,
-} from "../../components/ui";
+} from "../../../components/ui";
 
-import { useUrlQueryParams } from "../../hooks/use-url-query-params";
+import { useUrlQueryParams } from "../../../hooks/use-url-query-params";
 import { useUsers } from "./users.hooks";
 import type { User, UserListParams } from "./users.types";
 

@@ -1,8 +1,8 @@
 import type { SubmitEvent } from "react";
-import { Button, Input, Select } from "../../components/ui";
+import { Button, Input, Select } from "../../../components/ui";
 
-import { Form, FormActions, FormField } from "../../components/ui/form";
-import type { FormFieldErrors } from "../../components/ui/form/form.types";
+import { Form, FormActions, FormField } from "../../../components/ui/form";
+import type { FormFieldErrors } from "../../../components/ui/form/form.types";
 
 export interface UserFormValues {
   username: string;

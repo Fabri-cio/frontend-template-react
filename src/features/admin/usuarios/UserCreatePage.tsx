@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { getValidationFieldErrors } from "../../app/errors/validation-errors";
+import { getValidationFieldErrors } from "../../../app/errors/validation-errors";
 import {
   Button,
   Modal,
@@ -10,8 +10,8 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "../../components/ui";
-import type { FormFieldErrors } from "../../components/ui/form";
+} from "../../../components/ui";
+import type { FormFieldErrors } from "../../../components/ui/form";
 
 import UserForm from "./UserForm";
 import { useCreateUser } from "./users.hooks";
@@ -19,8 +19,8 @@ import { useCreateUser } from "./users.hooks";
 import type { UserFormValues } from "./UserForm";
 import type { CreateUserInput } from "./users.types";
 
-import { AppError } from "../../app/errors/app-error";
-import { showAppErrorToast, useToast } from "../../components/ui";
+import { AppError } from "../../../app/errors/app-error";
+import { showAppErrorToast, useToast } from "../../../components/ui";
 
 /**
  * Estado de navegación recibido desde la página de usuarios.

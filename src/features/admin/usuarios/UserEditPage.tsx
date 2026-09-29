@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
-import { AppError } from "../../app/errors/app-error";
-import { getValidationFieldErrors } from "../../app/errors/validation-errors";
+import { AppError } from "../../../app/errors/app-error";
+import { getValidationFieldErrors } from "../../../app/errors/validation-errors";
 import {
   Avatar,
   Badge,
@@ -24,8 +24,8 @@ import {
   useToast,
   Input,
   Checkbox,
-} from "../../components/ui";
-import type { FormFieldErrors } from "../../components/ui/form";
+} from "../../../components/ui";
+import type { FormFieldErrors } from "../../../components/ui/form";
 
 import UserForm from "./UserForm";
 import type { UserFormValues } from "./UserForm";

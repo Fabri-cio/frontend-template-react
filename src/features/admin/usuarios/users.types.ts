@@ -1,4 +1,4 @@
-import type { CrudListParams } from "../../api/api.types";
+import type { CrudListParams } from "../../../api/api.types";
 
 export interface User {
   id: number;

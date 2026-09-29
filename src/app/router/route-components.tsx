@@ -30,15 +30,15 @@ export const DashboardPage = lazy(
 );
 
 export const UsersPage = lazy(
-  () => import("../../features/usuarios/UsersPage"),
+  () => import("../../features/admin/usuarios/UsersPage"),
 );
 
 export const UserCreatePage = lazy(
-  () => import("../../features/usuarios/UserCreatePage"),
+  () => import("../../features/admin/usuarios/UserCreatePage"),
 );
 
 export const UserEditPage = lazy(
-  () => import("../../features/usuarios/UserEditPage"),
+  () => import("../../features/admin/usuarios/UserEditPage"),
 );
 
 export const LoginPage = lazy(() => import("../../features/auth/LoginPage"));

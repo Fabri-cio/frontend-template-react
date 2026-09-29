@@ -1,9 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useApiMutation } from "../../hooks/use.api.mutation";
-import { useApiQuery } from "../../hooks/use.api.query";
+import { useApiMutation } from "../../../hooks/use.api.mutation";
+import { useApiQuery } from "../../../hooks/use.api.query";
 
-import type { AppError } from "../../app/errors/app-error";
+import type { AppError } from "../../../app/errors/app-error";
 import type {
   CreateUserInput,
   UpdateUserInput,
