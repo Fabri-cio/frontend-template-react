@@ -9,6 +9,8 @@ import {
   LoginPage,
   NotFoundPage,
   ProduccionPage,
+  ProduccionPlanificacionPage,
+  ProduccionOrdenDetallePage,
   UiPlaygroundPage,
   UserCreatePage,
   UserEditPage,
@@ -83,6 +85,14 @@ export const appRoutes: AppRoute[] = [
       {
         path: "/produccion",
         element: <ProduccionPage />,
+      },
+      {
+        path: "/produccion/orden/:id",
+        element: <ProduccionOrdenDetallePage />,
+      },
+      {
+        path: "/produccion/planificacion/:id",
+        element: <ProduccionPlanificacionPage />,
       },
     ],
   },

@@ -48,3 +48,5 @@ export const AdminPage = lazy(() => import("../../features/admin/AdminPage"));
 
 // produccion
 export const ProduccionPage = lazy(() => import("../../features/produccion/ProduccionPage"));
+export const ProduccionPlanificacionPage = lazy(() => import("../../features/produccion/ProduccionPlanificacionPage"));
+export const ProduccionOrdenDetallePage = lazy(() => import("../../features/produccion/ProduccionOrdenDetallePage"));
