@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Filter, Search } from "lucide-react";
 
 import Input from "../Input";
@@ -37,18 +37,17 @@ export function DataTableToolbar({
 
   const [searchOpen, setSearchOpen] = useState(Boolean(search));
 
-  useEffect(() => {
-    if (search) {
-      setSearchOpen(true);
-    }
-  }, [search]);
+  // Si la búsqueda recibe un valor externo, se muestra automáticamente.
+  // Así evitamos sincronizar el estado mediante un useEffect.
+  const isSearchOpen = searchOpen || Boolean(search);
 
   function handleSearchToggle() {
-    if (!searchOpen) {
+    if (!isSearchOpen) {
       setSearchOpen(true);
       return;
     }
 
+    // Permite cerrar la búsqueda solamente cuando está vacía.
     if (!search?.trim()) {
       setSearchOpen(false);
     }
@@ -72,7 +71,7 @@ export function DataTableToolbar({
         <div className="flex items-center gap-2">
           {hasSearch ? (
             <>
-              {!searchOpen ? (
+              {!isSearchOpen ? (
                 <button
                   type="button"
                   onClick={handleSearchToggle}
